@@ -12,6 +12,8 @@ from urllib.parse import urlparse
 from compagnon.ai.prompts import build_prompt
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+# Models with a "thinking" mode (Ollama `think` option), turned off for speed.
+THINKING_PREFIXES = ("qwen3", "deepseek-r1", "gpt-oss", "magistral")
 
 
 class Rephraser(Protocol):
@@ -51,6 +53,7 @@ class OllamaRephraser:
         self.temperature = temperature
         self.rng = rng or random.Random()
         self.name = f"ollama:{model}:{prompt_style}"
+        self.thinking_model = model.startswith(THINKING_PREFIXES)
 
     def _post(self, path: str, body: dict, timeout: float) -> dict:
         req = urllib.request.Request(
@@ -89,5 +92,7 @@ class OllamaRephraser:
                 "stop": ["\n"],
             },
         }
+        if self.thinking_model:
+            body["think"] = False  # no hidden reasoning: it would eat the time and tokens
         out = self._post("/api/generate", body, timeout=10)
         return out.get("response")

@@ -125,3 +125,8 @@ def test_ai_phrase_is_logged_with_its_source(make_session):
     rec = h.log.events("ia")[-1]
     assert rec["source"] in ("llm", "reserve")
     assert h.log.events("dit")[-1]["source"] == rec["source"]
+
+
+def test_thinking_mode_disabled_for_reasoning_models():
+    assert OllamaRephraser(model="qwen3.5:2b").thinking_model
+    assert not OllamaRephraser(model="qwen2.5:1.5b").thinking_model

@@ -1,0 +1,82 @@
+# Vocabulaire simple autorise pour les phrases de l'IA (minuscules, avec accents).
+# Les mots de l'activite (couleurs, objets associes) sont ajoutes par l'activite.
+# Les elisions (l' d' j' qu' c' n' s' m' t') sont gerees par le filtre.
+
+# determinants
+le la les un une des du de au aux ce cet cette ces mon ma mes ton ta tes son sa ses
+notre nos votre vos leur leurs quel quelle quels quelles tout toute tous toutes chaque
+autre autres même mêmes
+
+# pronoms
+je tu il elle on nous vous ils elles me te se moi toi lui eux ça cela ceci
+celui celle ceux celles ci là y en qui que quoi où
+
+# mots outils
+à avec sans pour par sur sous dans devant derrière entre près loin vers chez comme
+et ou mais donc puis alors aussi encore déjà bien très peu plus moins si oui non ne
+pas jamais toujours ici voici voilà ensuite après avant maintenant doucement ensemble
+beaucoup parmi aujourd'hui accord bientôt hop allez oh ah coucou bonjour salut merci
+bravo super génial
+
+# nombres
+un deux trois quatre cinq six premier première dernier dernière
+
+# verbes (formes courantes)
+être suis es est sommes êtes sont sois soit
+avoir ai as a avons avez ont
+aller vais vas va allons allez vont
+faire fais fait faisons faites font
+pouvoir peux peut pouvons pouvez peuvent
+vouloir veux veut voulons voulez veulent
+voir vois voit voyons voyez
+regarder regarde regardes regardez regardons regardé
+toucher touche touches touchez touchons touché
+trouver trouve trouves trouvez trouvons trouvé
+chercher cherche cherches cherchez cherchons
+montrer montre montres montrez montrons
+choisir choisis choisit choisissez choisissons choisi
+prendre prends prend prenez prenons pris
+appuyer appuie appuies appuyez
+essayer essaie essaies essaye essayez essayons
+aider aide aides aidez
+jouer joue joues jouez jouons
+donner donne donnes donnez
+dire dis dit dites
+penser pense penses
+savoir sais sait
+connaître connais connaît
+aimer aime aimes aimons aimez
+ressembler ressemble ressemblent
+manger mange manges mangent
+briller brille brillent
+venir viens vient
+mettre mets met
+finir finis finit fini finie
+commencer commence
+continuer continue continuons
+recommencer recommence
+respirer respire
+reposer repose
+souffler souffle
+arrêter arrête arrêtons
+écouter écoute écoutez
+pointer pointe
+nager nage nagent
+voler vole volent
+pousser pousse poussent
+vivre vit vivent
+trouve-le touche-le
+
+# adjectifs
+petit petite petits petites grand grande grands grandes gros grosse beau belle beaux
+joli jolie jolis jolies bon bonne bons bonnes doux douce clair claire foncé foncée
+rond ronde pareil pareille vrai facile simple chaud chaude froid froide mûr mûre mûres
+sucré sucrée gentil gentille
+
+# noms
+couleur couleurs ballon ballons objet objets image dessin forme formes rond carré cercle
+main doigt doigts œil yeux bouton boutons chose choses jeu jeux fois réponse question
+indice pause fin ami amie amis maison école jour nuit matin soir temps fruit fruits
+légume légumes fleur fleurs arbre arbres feuille feuilles herbe ciel mer eau soleil lune
+étoile étoiles nuage nuages pluie neige terre sable jardin forêt animal animaux
+chat chien oiseau poisson lapin vache souris fraise pomme pommes poire lait pain

@@ -16,12 +16,19 @@ quand l'enfant semble surchargé. Outil **éducatif** : ni diagnostic, ni théra
 
 ---
 
+> **Membres du groupe (non-programmeurs)** : pas besoin de lire ce qui suit. Télécharger
+> le ZIP (bouton vert **Code → Download ZIP**), l'extraire, puis double-cliquer sur
+> **`Lancer le compagnon.bat`** (installe tout la première fois, puis lance le jeu).
+> Pour modifier le jeu et envoyer ses modifications au groupe, suivre le guide
+> **[Pour faire les mods](Pour%20faire%20les%20mods.md)** ; avant chaque envoi,
+> double-cliquer sur **`Verifier mes modifications.bat`**.
+
 ## 1. Installation sous Windows
 
 Prérequis : **Python 3.12** (python.org, cocher « Add to PATH ») et Git.
 
 ```powershell
-git clone <url-du-depot-du-groupe> compagnon
+git clone https://github.com/joaovictorcesario/compagnon.git compagnon
 cd compagnon
 py -3.12 -m venv .venv
 .venv\Scripts\activate

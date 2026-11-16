@@ -9,13 +9,17 @@ from itertools import permutations
 from pathlib import Path
 
 AVAILABLE_ACTIVITIES = ("couleurs",)
+# Voice presets (see voice/presets.py; same names, checked by a test)
+VOICE_CHOICES = ("jessica", "jessica-douce", "jessica-enfant", "siwis", "siwis-douce",
+                 "siwis-enfant")
 
 
 @dataclass
 class Settings:
     volume: int = 70  # 0-100
+    voice: str = "jessica"  # voice preset (timbre)
     voice_rate: str = "normale"  # "lente" | "normale"
-    sounds: bool = True  # sound effects (reward chime)
+    sounds: bool = True  # sound effects (soft success sound)
     palette: str = "sable"  # "sable" | "ciel" | "menthe"
     animations: bool = True
     text_size: str = "moyen"  # "petit" | "moyen" | "grand"
@@ -27,7 +31,7 @@ class Settings:
     silence_end_s: int = 60  # no answer at all -> end calmly
     pause_mode: str = "proposee"  # "proposee" | "automatique"
     pause_interval_s: int = 180  # scheduled pause offer (0 = never)
-    reward: str = "etoile"  # "etoile" | "son" | "image"
+    reward: str = "etoile"  # visual reward: "etoile" | "image" | "aucune" (sound only)
     reward_image: str = ""  # file name in the rewards folder
     items_per_activity: int = 10
     activity_max_s: int = 240  # 2-5 min per activity (FP1)
@@ -45,8 +49,9 @@ class SettingSpec:
 
 SETTING_SPECS: tuple[SettingSpec, ...] = (
     SettingSpec("volume", "Volume", tuple(range(0, 101, 10))),
-    SettingSpec("voice_rate", "Voix", ("lente", "normale")),
-    SettingSpec("sounds", "Sons (effets)", (True, False)),
+    SettingSpec("voice", "Voix", VOICE_CHOICES),
+    SettingSpec("voice_rate", "Débit de la voix", ("lente", "normale")),
+    SettingSpec("sounds", "Son de réussite", (True, False)),
     SettingSpec("palette", "Couleurs de l'écran", ("sable", "ciel", "menthe")),
     SettingSpec("animations", "Animations", (True, False)),
     SettingSpec("text_size", "Taille du texte", ("petit", "moyen", "grand")),
@@ -59,13 +64,13 @@ SETTING_SPECS: tuple[SettingSpec, ...] = (
     SettingSpec("pause_mode", "Pause si surcharge", ("proposee", "automatique")),
     SettingSpec("pause_interval_s", "Pause proposée toutes les", (0, 90, 120, 150, 180, 240)),
     SettingSpec("activity_max_s", "Durée d'une activité", (120, 180, 240, 300)),
-    SettingSpec("reward", "Récompense", ("etoile", "son", "image")),
+    SettingSpec("reward", "Récompense visuelle", ("etoile", "image", "aucune")),
 )
 
 _LABELS = {
     "lente": "lente", "normale": "normale", "sable": "sable", "ciel": "ciel", "menthe": "menthe",
     "petit": "petit", "moyen": "moyen", "grand": "grand", "proposee": "proposée",
-    "automatique": "automatique", "etoile": "étoile", "son": "son", "image": "image",
+    "automatique": "automatique", "etoile": "étoile", "image": "image", "aucune": "aucune",
 }
 
 

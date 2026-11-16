@@ -230,16 +230,25 @@ def test_every_instruction_has_voice_text_and_image(make_session):
         assert scene.text in h.spoken
 
 
-def test_reward_shown_on_success(make_session):
-    h = make_session(settings=Settings(reward="son"))
+def test_success_gives_soft_sound_not_repeated_phrases(make_session):
+    h = make_session()
+    h.to_first_question()
+    for _ in range(3):
+        n_said = len(h.spoken)
+        h.answer_right()
+        assert len(h.spoken) == n_said, "no spoken praise on success"
+        h.next_question()
+    assert h.voice.chimes == 3
+    assert h.display.named("show_reward")[-1].kind == "etoile"
+
+
+def test_success_sound_can_be_turned_off_and_visual_reward_chosen(make_session):
+    h = make_session(settings=Settings(sounds=False, reward="aucune"))
     h.to_first_question()
     h.answer_right()
-    assert h.display.named("show_reward")[-1].kind == "son"
-    assert h.voice.chimes == 1
-    h2 = make_session(settings=Settings(reward="son", sounds=False))
-    h2.to_first_question()
-    h2.answer_right()
-    assert h2.voice.chimes == 0
+    assert h.voice.chimes == 0
+    assert not h.display.named("show_reward")
+    assert h.display.named("set_expression")[-1] == "content"
 
 
 def test_never_a_failure_message(make_session):

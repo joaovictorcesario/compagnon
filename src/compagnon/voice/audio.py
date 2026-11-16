@@ -7,19 +7,19 @@
 
 from __future__ import annotations
 
-import array
 import hashlib
 import io
-import math
 import os
 import threading
 import wave
+from collections.abc import Callable
 from pathlib import Path
 
 import pygame
 
 from compagnon.core.settings import Settings
 from compagnon.voice.presets import DEFAULT_VOICE, resolve_voice
+from compagnon.voice.sounds import success_pcm
 
 SAMPLE_RATE = 22050
 FADE_MS = 120
@@ -97,18 +97,27 @@ def load_engine(voices_dir: Path, voice_name: str = DEFAULT_VOICE) -> PiperEngin
 
 
 class PygameVoice:
-    def __init__(self, cache_dir: Path, engine: PiperEngine | None) -> None:
+    def __init__(self, cache_dir: Path, engine: PiperEngine | None,
+                 engine_loader: Callable[[str], PiperEngine | None] | None = None,
+                 voice_name: str | None = None) -> None:
         if not pygame.mixer.get_init():
             pygame.mixer.init(frequency=SAMPLE_RATE, size=-16, channels=1)
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.engine = engine
+        self.engine_loader = engine_loader  # to change voice from the adult settings
+        self.voice_name = voice_name
+        self._engines: dict[str, PiperEngine | None] = {}
+        if voice_name is not None:
+            self._engines[voice_name] = engine
+        self._preload_texts: list[str] = []
         self.volume = 0.7
         self.slow = False
         self.sounds = True
         self.muted = False
         self._lock = threading.Lock()
-        self._chime = self._make_chime()
+        freq, _size, channels = pygame.mixer.get_init()
+        self._success = pygame.mixer.Sound(buffer=success_pcm(freq, channels))
         self._voice_channel: pygame.mixer.Channel | None = None
 
     # ------------------------------------------------------------ Voice interface
@@ -116,6 +125,19 @@ class PygameVoice:
         self.volume = max(0, min(100, settings.volume)) / 100
         self.slow = settings.voice_rate == "lente"
         self.sounds = settings.sounds
+        if self.engine_loader is not None and settings.voice != self.voice_name:
+            self._switch_voice(settings.voice)
+
+    def _switch_voice(self, name: str) -> None:
+        if name not in self._engines:
+            self._engines[name] = self.engine_loader(name) if self.engine_loader else None
+        if self._engines[name] is None:  # voice not installed: keep the current one
+            print(f"[voix] « {name} » indisponible, voix actuelle conservée")
+            return
+        self.engine, self.voice_name = self._engines[name], name
+        print(f"[voix] {self.engine.name}")
+        if self._preload_texts:
+            self.preload(self._preload_texts)
 
     def say(self, text: str) -> None:
         if self.muted or self.volume <= 0 or self.engine is None:
@@ -138,22 +160,25 @@ class PygameVoice:
             self.stop()
 
     def chime(self) -> None:
+        """Soft success sound (see sounds.py)."""
         if self.muted or not self.sounds or self.volume <= 0:
             return
-        self._chime.set_volume(self.volume * 0.6)
-        self._chime.play(fade_ms=FADE_MS)
+        self._success.set_volume(self.volume)
+        self._success.play(fade_ms=FADE_MS)
 
     # ------------------------------------------------------------ cache
     def preload(self, texts: list[str]) -> threading.Thread:
         """Synthesise the prepared phrases in the background at start-up."""
+        self._preload_texts = list(texts)
         th = threading.Thread(target=lambda: [self._wav(t) for t in texts], daemon=True)
         th.start()
         return th
 
     def _wav(self, text: str) -> Path | None:
-        if self.engine is None:
+        engine = self.engine
+        if engine is None:
             return None
-        key = hashlib.sha1(f"{self.engine.name}|{self.slow}|{text}".encode()).hexdigest()[:16]
+        key = hashlib.sha1(f"{engine.name}|{self.slow}|{text}".encode()).hexdigest()[:16]
         path = self.cache_dir / f"{key}.wav"
         if path.exists():
             return path
@@ -162,23 +187,9 @@ class PygameVoice:
                 return path
             tmp = path.with_suffix(".tmp")
             try:
-                self.engine.synthesize(text, tmp, self.slow)
+                engine.synthesize(text, tmp, self.slow)
                 os.replace(tmp, path)
             except Exception as exc:  # noqa: BLE001
                 print(f"[voix] synthèse impossible : {exc}")
                 return None
         return path
-
-    @staticmethod
-    def _make_chime() -> pygame.mixer.Sound:
-        """Soft two-note chime, generated (no sound file), with fade in and out."""
-        freq, size, channels = pygame.mixer.get_init()
-        n = int(freq * 0.7)
-        buf = array.array("h")
-        for i in range(n):
-            t = i / freq
-            note = 660 if t < 0.3 else 880
-            env = min(1.0, t / 0.05) * max(0.0, 1 - t / 0.7)
-            v = int(6000 * env * math.sin(2 * math.pi * note * t))
-            buf.extend([v] * channels)
-        return pygame.mixer.Sound(buffer=buf.tobytes())

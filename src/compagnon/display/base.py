@@ -25,7 +25,7 @@ class Scene:
 
 @dataclass(frozen=True)
 class RewardView:
-    kind: str  # "etoile" | "son" | "image"
+    kind: str  # "etoile" | "image" | "aucune"
     image_path: str = ""
 
 

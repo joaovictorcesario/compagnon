@@ -21,7 +21,7 @@ VOICE_PRESETS: dict[str, VoicePreset] = {
     "jessica-douce": VoicePreset("fr_FR-upmc-medium", "jessica", semitones=3),
     "jessica-enfant": VoicePreset("fr_FR-upmc-medium", "jessica", semitones=5),
 }
-DEFAULT_VOICE = "siwis-douce"
+DEFAULT_VOICE = "jessica"  # calm and natural (chosen by the team)
 
 
 def resolve_voice(name: str) -> VoicePreset:

@@ -89,7 +89,6 @@ class SessionController:
         self.hint_levels: list[int] = []
         self.activity_report: dict[str, dict[str, float]] = {}
         self.end_reason: str | None = None
-        self._praise_i = 0
 
     # ------------------------------------------------------------------ helpers
     @property
@@ -280,13 +279,14 @@ class SessionController:
         path = ""
         if s.reward == "image" and s.reward_image:
             path = s.reward_image
-        self.display.show_reward(RewardView(s.reward, path))
+        if s.reward != "aucune":
+            self.display.show_reward(RewardView(s.reward, path))
         self.display.set_expression("content")
-        praise = phrases.PRAISE[self._praise_i % len(phrases.PRAISE)]
-        self._praise_i += 1
-        self._say(praise, "felicitation")
-        if s.reward == "son" and s.sounds:
+        # No spoken praise (it became repetitive): always the same soft success sound,
+        # predictable for the child (FC1). Silent if the adult turned sounds off.
+        if s.sounds:
             self.voice.chime()
+        self.log.log("recompense", visuelle=s.reward, son=s.sounds)
 
     def _give_help(self, level: int, trigger: str) -> None:
         assert self.item is not None

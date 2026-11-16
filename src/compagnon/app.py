@@ -35,8 +35,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--modele", default="qwen2.5:1.5b")
     p.add_argument("--prompt", choices=["normal", "court"], default="normal")
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S)
-    p.add_argument("--voix", default=DEFAULT_VOICE,
-                   help=f"préréglage ({', '.join(VOICE_PRESETS)}) ou modèle Piper")
+    p.add_argument("--voix", default=None,
+                   help=f"préréglage ({', '.join(VOICE_PRESETS)}) ou modèle Piper ; par défaut "
+                        f"celle choisie dans le mode accompagnant ({DEFAULT_VOICE} au départ)")
     p.add_argument("--personnage", type=Path, default=None,
                    help="dossier d'images du personnage (neutre.png, content.png...)")
     p.add_argument("--sans-voix", action="store_true")
@@ -97,9 +98,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.sans_voix:
         voice = RecordingVoice()
     else:
-        engine = load_engine(paths.voices, args.voix)
+        voice_name = args.voix or companion.settings.voice
+        engine = load_engine(paths.voices, voice_name)
         print(f"[voix] {engine.name if engine else 'aucune (texte seulement)'}")
-        voice = PygameVoice(paths.tts_cache, engine)
+        voice = PygameVoice(paths.tts_cache, engine,
+                            engine_loader=lambda name: load_engine(paths.voices, name),
+                            voice_name=voice_name)
+        if args.voix:  # command line wins for this run
+            companion.settings.voice = args.voix if args.voix in VOICE_PRESETS else voice_name
         texts = list(phrases.ALL_FIXED)
         for a in activities:
             texts += a.fixed_phrases()

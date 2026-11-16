@@ -48,17 +48,18 @@ python -m compagnon.tools.verifier_voix
 > assistants), Windows peut rediriger `%APPDATA%` vers un dossier privé de cette
 > application : utiliser alors le dossier `voix\` du projet.
 
-Piper n'a pas de voix d'enfant en français : les préréglages montent la hauteur de la voix
-(sans accélérer le débit) pour une voix plus douce et plus jeune. Choix avec `--voix` :
+Voix par défaut : **jessica** (calme et naturelle, choisie par le groupe). L'adulte peut en
+changer dans le mode accompagnant (*Réglages → Voix*, appliqué à la fermeture), ou pour un
+lancement avec `--voix`. Piper n'a pas de voix d'enfant en français : les variantes
+« douce »/« enfant » montent la hauteur (sans accélérer le débit).
 
 | Préréglage | Voix | Hauteur |
 |---|---|---|
-| `siwis` | fr_FR-siwis-medium | normale |
-| `siwis-douce` (**défaut**) | fr_FR-siwis-medium | +3 demi-tons |
-| `siwis-enfant` | fr_FR-siwis-medium | +5 demi-tons |
-| `jessica`, `jessica-douce`, `jessica-enfant` | fr_FR-upmc-medium (locutrice jessica) | 0 / +3 / +5 |
+| `jessica` (**défaut**) | fr_FR-upmc-medium (locutrice jessica) | normale |
+| `jessica-douce`, `jessica-enfant` | fr_FR-upmc-medium (jessica) | +3 / +5 demi-tons |
+| `siwis`, `siwis-douce`, `siwis-enfant` | fr_FR-siwis-medium | 0 / +3 / +5 demi-tons |
 
-Le terminal affiche la voix chargée (`[voix] piper:fr_FR-siwis-medium:-:+3`). Sans voix
+Le terminal affiche la voix chargée (`[voix] piper:fr_FR-upmc-medium:jessica:+0`). Sans voix
 installée, le compagnon fonctionne quand même (texte + image) et l'indique. Option
 `--sans-voix` pour couper la voix volontairement.
 
@@ -87,11 +88,15 @@ python -m compagnon --profil enfant1
 Code par défaut **1234** : le changer dans *Données → Changer le code* (stocké haché).
 3 codes faux → blocage 30 s.
 
-* **Réglages** (FP4) : volume, voix lente/normale, sons, 3 palettes douces, animations,
-  taille du texte, activités et ordre, niveau de départ, seuils réussites/erreurs, délai
-  avant de répéter la consigne, pause proposée/automatique, intervalle de pause,
-  durée d'activité, récompense (étoile, son, image). Pour l'image préférée, déposer des
-  `.png`/`.jpg` dans `%APPDATA%\compagnon\recompenses`.
+* **Réglages** (FP4) : volume, voix (timbre), débit lent/normal, son de réussite
+  (oui/non), 3 palettes douces, animations, taille du texte, activités et ordre, niveau de
+  départ, seuils réussites/erreurs, délai avant de répéter la consigne, pause
+  proposée/automatique, intervalle de pause, durée d'activité, récompense visuelle (étoile,
+  image, aucune). Pour l'image préférée, déposer des `.png`/`.jpg` dans
+  `%APPDATA%\compagnon\recompenses`.
+* **Bonne réponse** : pas de phrase répétée, mais toujours le même **son doux** (trois notes
+  sol-do-mi, timbre de marimba, 1,2 s, volume bas, attaque et fin progressives ; généré
+  par `voice/sounds.py`) + la récompense visuelle. Désactivable (*Son de réussite*).
 * **Questions** (FP6) : après un moment difficile, « Était-ce une crise ? » et « Cette aide
   a-t-elle marché ? ». Posées **uniquement à l'adulte**.
 * **Données** : mettre l'apprentissage en pause, nouvelle séance, changer le code,
@@ -148,7 +153,7 @@ immédiatement (réaction < 2 s garantie). Chaque phrase est journalisée avec s
 ## 3. Tests et validation
 
 ```powershell
-python -m pytest            # 76 tests, < 10 s, temps simulé
+python -m pytest            # 78 tests, < 10 s, temps simulé
 python -m ruff check src tests
 ```
 
@@ -221,7 +226,7 @@ la phrase), surcharge, pause… Les journaux sont dans `%APPDATA%\compagnon\jour
   erreurs 5→4 (min 4), pause planifiée 3 min → 2 min 30 → … (min 1 min 30).
   Uniquement si l'apprentissage est actif ; le reset d'usine annule tout.
 * Pause planifiée proposée toutes les 3 min ; activité de 4 min ou 10 questions.
-* « Sons » = effets sonores (récompense) ; la voix suit le volume.
+* « Son de réussite » = le son doux de bonne réponse ; la voix suit le volume.
 * Le compteur de 60 s pour « termine calmement » part de la dernière action de l'enfant.
 * Mauvaise réponse → « Essaie encore. », jamais de message d'échec.
 

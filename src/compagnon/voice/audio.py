@@ -30,6 +30,16 @@ class PiperEngine:
 
         self.voice = PiperVoice.load(str(model_path))
         self.name = f"piper:{model_path.stem}"
+        self._warmup()
+
+    def _warmup(self) -> None:
+        """The very first synthesis takes several seconds (engine start-up). Do it now,
+        before the session starts, so no reaction during the session exceeds 2 s."""
+        import io
+
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            self.voice.synthesize_wav("Bonjour.", wf)
 
     def synthesize(self, text: str, out: Path, slow: bool) -> None:
         from piper import SynthesisConfig

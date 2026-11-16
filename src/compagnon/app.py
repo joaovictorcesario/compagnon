@@ -11,7 +11,7 @@ import random
 import threading
 from pathlib import Path
 
-from compagnon.activities import build_activities
+from compagnon.activities import CATALOG, build_activities
 from compagnon.ai import AIService, OllamaRephraser, SentenceFilter, StubRephraser
 from compagnon.ai.service import DEFAULT_TIMEOUT_S
 from compagnon.child import ProfileStore
@@ -72,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
     import pygame
 
     from compagnon.display.character import load_character
-    from compagnon.display.pygame_display import PygameDisplay
+    from compagnon.display.pygame_display import GREETING, PygameDisplay
     from compagnon.voice.audio import PygameVoice, load_engine
 
     paths = DataPaths(args.donnees or default_data_dir()).ensure()
@@ -90,10 +90,7 @@ def main(argv: list[str] | None = None) -> int:
     companion = CompanionMode(paths=paths, settings_store=settings_store,
                               pin_store=PinStore(paths.pin), profile_store=profile_store,
                               profile=profile, clock=clock, on_action=adult_action)
-    display = PygameDisplay(companion.settings, companion, args.plein_ecran, paths.rewards,
-                            load_character(args.personnage or paths.character))
     ai = build_ai(args)
-    activities = build_activities(companion.settings.activities)
 
     if args.sans_voix:
         voice = RecordingVoice()
@@ -106,20 +103,26 @@ def main(argv: list[str] | None = None) -> int:
                             voice_name=voice_name)
         if args.voix:  # command line wins for this run
             companion.settings.voice = args.voix if args.voix in VOICE_PRESETS else voice_name
-        texts = list(phrases.ALL_FIXED)
-        for a in activities:
-            texts += a.fixed_phrases()
+        texts = [GREETING, *phrases.ALL_FIXED]
+        for entry in CATALOG.entries():
+            texts += [entry.description, *entry.factory().fixed_phrases()]
         voice.preload(texts)
 
+    display = PygameDisplay(companion.settings, companion, args.plein_ecran, paths.rewards,
+                            load_character(args.personnage or paths.character),
+                            speaking=getattr(voice, "is_speaking", None))
+    voice.configure(companion.settings)
     rng = random.Random(args.graine)
 
-    def new_session() -> SessionController:
+    def new_session(activity_id: str) -> SessionController:
+        """One session = the game chosen on the home screen."""
         logger = SessionLogger(None, clock)
         logger.path = new_log_path(paths.logs, profile.name, logger.session_id)
         print(f"[journal] {logger.path}")
+        display.set_activity(CATALOG.get(activity_id) if activity_id in CATALOG else None)
         ctrl = SessionController(
             clock=clock, display=display, voice=voice, ai=ai,
-            activities=build_activities(companion.settings.activities),
+            activities=build_activities([activity_id]),
             settings=companion.settings, profile=profile, logger=logger,
             profile_store=profile_store, rng=rng,
         )
@@ -127,7 +130,13 @@ def main(argv: list[str] | None = None) -> int:
         ctrl.start()
         return ctrl
 
-    ctrl = new_session()
+    def home(greet: bool) -> None:
+        display.show_menu(companion.visible_games())
+        if greet:
+            voice.say(GREETING)
+
+    ctrl: SessionController | None = None
+    home(greet=True)
     fps = pygame.time.Clock()
     running = True
     while running:
@@ -135,17 +144,37 @@ def main(argv: list[str] | None = None) -> int:
             if ev.kind == Kind.QUIT:
                 running = False
                 break
-            if ev.kind == Kind.NEW_SESSION:
-                ctrl.close("nouvelle_seance")
-                ctrl = new_session()
+            if ev.kind in (Kind.MENU, Kind.NEW_SESSION):  # back to the home screen
+                if ctrl is not None:
+                    ctrl.close("menu" if ev.kind == Kind.MENU else "nouvelle_seance")
+                    ctrl = None
+                    holder.pop("ctrl", None)
+                voice.stop()
+                home(greet=False)
+                continue
+            if ev.kind == Kind.START and ev.value:
+                if ctrl is not None:
+                    ctrl.close("nouvelle_seance")
+                ctrl = new_session(ev.value)
+                continue
+            if ev.kind == Kind.DESCRIBE and ev.value in CATALOG:
+                voice.say(CATALOG.get(ev.value).description)
                 continue
             if ev.kind == Kind.ADULT_CLOSE:
-                ctrl.update_settings(companion.settings)
-            ctrl.handle(ev)
-        ctrl.tick()
+                display.apply_settings(companion.settings)
+                voice.configure(companion.settings)
+                if ctrl is None:  # on the home screen: the adult may have changed the games
+                    home(greet=False)
+                else:
+                    ctrl.update_settings(companion.settings)
+            if ctrl is not None:
+                ctrl.handle(ev)
+        if ctrl is not None:
+            ctrl.tick()
         display.render()
         fps.tick(30)
-    ctrl.close("quitter")
+    if ctrl is not None:
+        ctrl.close("quitter")
     pygame.quit()
     return 0
 

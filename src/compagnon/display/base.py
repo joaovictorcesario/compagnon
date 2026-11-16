@@ -10,7 +10,7 @@ from compagnon.activities.base import Choice, ImageSpec
 from compagnon.core.events import InputEvent
 from compagnon.core.settings import Settings
 
-EXPRESSIONS = ("neutre", "content", "encourage", "calme")
+EXPRESSIONS = ("neutre", "content", "encourage", "calme", "ecoute")
 
 
 @dataclass(frozen=True)

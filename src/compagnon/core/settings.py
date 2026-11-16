@@ -5,10 +5,9 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import asdict, dataclass, field, fields
-from itertools import permutations
 from pathlib import Path
 
-AVAILABLE_ACTIVITIES = ("couleurs",)
+AVAILABLE_ACTIVITIES = ("couleurs",)  # default order; games are chosen in the "Jeux" tab
 # Voice presets (see voice/presets.py; same names, checked by a test)
 VOICE_CHOICES = ("jessica", "jessica-douce", "jessica-enfant", "siwis", "siwis-douce",
                  "siwis-enfant")
@@ -24,6 +23,8 @@ class Settings:
     animations: bool = True
     text_size: str = "moyen"  # "petit" | "moyen" | "grand"
     activities: list[str] = field(default_factory=lambda: list(AVAILABLE_ACTIVITIES))
+    # home-screen cards: `activities` = order chosen by the adult, these ones are hidden
+    hidden_activities: list[str] = field(default_factory=list)
     initial_level: int = 1  # difficulty 1-4 (number of choices)
     success_threshold: int = 3  # successes without help -> harder
     error_threshold: int = 3  # errors in a row -> hint, then easier
@@ -55,8 +56,6 @@ SETTING_SPECS: tuple[SettingSpec, ...] = (
     SettingSpec("palette", "Couleurs de l'écran", ("sable", "ciel", "menthe")),
     SettingSpec("animations", "Animations", (True, False)),
     SettingSpec("text_size", "Taille du texte", ("petit", "moyen", "grand")),
-    SettingSpec("activities", "Activités (ordre)",
-                tuple(list(p) for p in permutations(AVAILABLE_ACTIVITIES))),
     SettingSpec("initial_level", "Niveau de départ", (1, 2, 3, 4)),
     SettingSpec("success_threshold", "Réussites pour monter", (2, 3, 4, 5)),
     SettingSpec("error_threshold", "Erreurs avant l'aide", (2, 3, 4, 5)),

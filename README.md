@@ -65,14 +65,46 @@ installée, le compagnon fonctionne quand même (texte + image) et l'indique. Op
 
 ### Personnage personnalisé
 
-Le personnage dessiné (formes géométriques) est remplaçable sans toucher au code : déposer
-une image par expression dans `%APPDATA%\compagnon\personnage\` (ou `--personnage <dossier>`)
-: `neutre.png` (obligatoire), `content.png`, `encourage.png`, `calme.png`. PNG carré à fond
-transparent, n'importe quelle taille ; une expression manquante utilise `neutre.png`.
-Pas de clignotement : seule une « respiration » lente est appliquée si les animations sont
-activées. Code : `src/compagnon/display/character.py` (interface `Character`).
+Le personnage dessiné (« Pipo », formes simples, original) est remplaçable sans toucher au
+code : déposer une image par expression dans `%APPDATA%\compagnon\personnage\` (ou
+`--personnage <dossier>`) : `neutre.png` (obligatoire), `content.png`, `encourage.png`,
+`calme.png`, `ecoute.png` (attend la réponse), et en option `parle.png` (bouche ouverte,
+alternée pendant que la voix parle). PNG carré à fond transparent, n'importe quelle taille ;
+une expression manquante utilise `neutre.png`. Pas de clignotement : seule une
+« respiration » lente et la bouche qui bouge pendant la parole, les deux coupées si les
+animations sont désactivées. Code : `src/compagnon/display/character.py` (interface
+`Character`).
 
-### Lancer le démonstrateur V1
+### Écrans et design
+
+Accueil (le personnage dit « Bonjour ! » + cartes de jeux) → toucher une carte → le
+personnage annonce le jeu et montre l'**emploi du temps visuel** (« D'abord : le jeu »
+→ « Ensuite : une récompense » → « Fin », l'étape en cours reste visible en haut à droite
+pendant la partie) → jeu → écran de fin (« C'est fini pour aujourd'hui. Bravo ! », étoiles
+gagnées, bouton *Menu*). Le petit haut-parleur d'une carte fait dire au personnage à quoi
+sert le jeu. Bouton *Maison* discret en haut à gauche du jeu, avec confirmation par
+pictogrammes (pas de sortie par erreur).
+
+* **Calme** (FC2) : tous les choix visuels sont des *tokens* dans
+  `src/compagnon/display/theme.py` (fond, surface, texte, contour, 3 couleurs d'accent,
+  rayons, ombres). Les 3 palettes du mode accompagnant en sont dérivées. Contraste du texte
+  ≥ 4,5:1 vérifié par `tests/test_theme.py`. Rien ne clignote ; fondu ≤ 250 ms entre les
+  écrans, supprimé quand les animations sont désactivées.
+* **Police** : Andika (SIL Open Font License, conçue pour l'apprentissage de la lecture),
+  incluse dans `src/compagnon/assets/fonts/` : fonctionne hors ligne.
+* **Fenêtre** redimensionnable, tout est mis à l'échelle (canevas logique 1280×720) ;
+  **F11** ou `--plein-ecran` pour le plein écran.
+* **Ajouter un jeu** : écrire l'activité, puis une entrée dans
+  `src/compagnon/activities/catalog.py` (titre, phrase de description, illustration,
+  couleur de carte parmi les accents). La carte apparaît seule, après les cartes existantes.
+* **Captures automatiques** de tous les écrans (1280×720 et 1920×1080) :
+  ```powershell
+  python -m compagnon.tools.captures
+  ```
+  Résultat dans `docs/captures/`. Le menu à 4 cartes y utilise des jeux fictifs, jamais
+  présents dans l'application.
+
+### Lancer l'application
 
 ```powershell
 python -m compagnon --profil enfant1
@@ -84,22 +116,25 @@ python -m compagnon --profil enfant1
 
 ### Mode accompagnant (adulte)
 
-**Appui long (3 s) sur le petit point discret en haut à droite**, puis code à 4 chiffres.
+**Appui long (3 s) sur le petit point discret en haut à droite** (sur tous les écrans,
+accueil compris), puis code à 4 chiffres.
 Code par défaut **1234** : le changer dans *Données → Changer le code* (stocké haché).
 3 codes faux → blocage 30 s.
 
 * **Réglages** (FP4) : volume, voix (timbre), débit lent/normal, son de réussite
-  (oui/non), 3 palettes douces, animations, taille du texte, activités et ordre, niveau de
-  départ, seuils réussites/erreurs, délai avant de répéter la consigne, pause
+  (oui/non), 3 palettes douces, animations, taille du texte, niveau de départ, seuils réussites/erreurs, délai avant de répéter la consigne, pause
   proposée/automatique, intervalle de pause, durée d'activité, récompense visuelle (étoile,
   image, aucune). Pour l'image préférée, déposer des `.png`/`.jpg` dans
   `%APPDATA%\compagnon\recompenses`.
 * **Bonne réponse** : pas de phrase répétée, mais toujours le même **son doux** (trois notes
   sol-do-mi, timbre de marimba, 1,2 s, volume bas, attaque et fin progressives ; généré
   par `voice/sounds.py`) + la récompense visuelle. Désactivable (*Son de réussite*).
+* **Jeux** (FP4) : quels jeux apparaissent sur l'écran d'accueil de l'enfant et dans quel
+  ordre (*Affiché/Caché*, *Monter/Descendre*). 4 cartes au maximum, au moins une. Les
+  cartes gardent leur place d'une séance à l'autre (FC1).
 * **Questions** (FP6) : après un moment difficile, « Était-ce une crise ? » et « Cette aide
   a-t-elle marché ? ». Posées **uniquement à l'adulte**.
-* **Données** : mettre l'apprentissage en pause, nouvelle séance, changer le code,
+* **Données** : mettre l'apprentissage en pause, nouvelle séance (retour à l'accueil), changer le code,
   réinitialisation d'usine (efface tout ce qui a été appris, **garde les journaux**),
   supprimer les journaux (bouton séparé), quitter.
 

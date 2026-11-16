@@ -23,6 +23,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 "compagnon.content" = ["*.json"]
 "compagnon.ai" = ["*.txt"]
+"compagnon.assets.fonts" = ["*.ttf", "*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

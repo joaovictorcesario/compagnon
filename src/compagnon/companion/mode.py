@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from compagnon.activities.catalog import CATALOG, MAX_VISIBLE, Catalog, CatalogEntry
 from compagnon.child.profile import ChildProfile, ProfileStore, apply_answer
 from compagnon.companion.pin import PinStore, valid_pin
 from compagnon.core.clock import Clock
@@ -24,7 +25,9 @@ IMAGE_EXT = (".png", ".jpg", ".jpeg", ".bmp")
 class CompanionMode:
     def __init__(self, *, paths: DataPaths, settings_store: SettingsStore, pin_store: PinStore,
                  profile_store: ProfileStore, profile: ChildProfile, clock: Clock,
-                 on_action: Callable[..., object] | None = None) -> None:
+                 on_action: Callable[..., object] | None = None,
+                 catalog: Catalog | None = None) -> None:
+        self.catalog = catalog or CATALOG
         self.paths = paths
         self.settings_store = settings_store
         self.pin_store = pin_store
@@ -96,6 +99,58 @@ class CompanionMode:
         setattr(self.settings, key, list(new) if isinstance(new, list) else new)
         self.settings_store.save(self.settings)
         self.on_action("reglage", cle=key, valeur=getattr(self.settings, key))
+
+    # --- games on the home screen (FP4) -------------------------------------------
+    def visible_games(self) -> list[CatalogEntry]:
+        """Cards shown to the child, in the adult's order (same place every session)."""
+        s = self.settings
+        return self.catalog.visible(s.activities, s.hidden_activities)
+
+    def games(self) -> list[tuple[CatalogEntry, bool]]:
+        """Every registered game with its state: visible ones first, in card order."""
+        visible = self.visible_games()
+        ids = {e.id for e in visible}
+        rest = [e for e in self.catalog.entries() if e.id not in ids]
+        return [(e, True) for e in visible] + [(e, False) for e in rest]
+
+    def toggle_game(self, game_id: str) -> str | None:
+        """Show / hide a card. Returns a message when refused (last card, or too many)."""
+        self._require()
+        s = self.settings
+        visible = [e.id for e in self.visible_games()]
+        if game_id in visible:
+            if len(visible) == 1:
+                return "Il faut au moins un jeu."
+            visible.remove(game_id)
+            hidden = [*s.hidden_activities, game_id]
+        else:
+            if len(visible) >= MAX_VISIBLE:
+                return f"{MAX_VISIBLE} jeux au maximum, pour ne pas surcharger l'écran."
+            visible.append(game_id)
+            hidden = [i for i in s.hidden_activities if i != game_id]
+        self._save_games(visible, hidden)
+        return None
+
+    def move_game(self, game_id: str, step: int) -> None:
+        """Move a visible card one place earlier (-1) or later (+1)."""
+        self._require()
+        visible = [e.id for e in self.visible_games()]
+        if game_id not in visible:
+            return
+        i = visible.index(game_id)
+        j = max(0, min(len(visible) - 1, i + step))
+        visible.insert(j, visible.pop(i))
+        self._save_games(visible, list(self.settings.hidden_activities))
+
+    def _save_games(self, visible: list[str], hidden: list[str]) -> None:
+        s = self.settings
+        s.activities = visible
+        # Once the adult has chosen, every game not shown is hidden on purpose; only games
+        # registered LATER (new versions of the app) appear by themselves.
+        not_shown = {e.id for e in self.catalog.entries()} - set(visible)
+        s.hidden_activities = sorted((set(hidden) | not_shown) - set(visible))
+        self.settings_store.save(s)
+        self.on_action("jeux", visibles=visible, caches=s.hidden_activities)
 
     # --- questions to the adult (FP6) ---------------------------------------------
     def questions(self) -> list[dict]:

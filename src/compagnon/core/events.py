@@ -18,6 +18,10 @@ class Kind(str, Enum):
     ADULT_CLOSE = "adulte_ferme"
     NEW_SESSION = "nouvelle_seance"
     QUIT = "quitter"
+    # Home screen (handled by the app, never by the session controller)
+    MENU = "menu"  # back to the home screen ("Maison" button, confirmed)
+    START = "lancer"  # value = activity id of the touched card
+    DESCRIBE = "decrire"  # value = activity id: the character says the card's description
 
 
 CHILD_KINDS = frozenset(

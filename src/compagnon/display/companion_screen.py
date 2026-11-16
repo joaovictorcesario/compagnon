@@ -12,8 +12,9 @@ import pygame
 from compagnon.companion.mode import CompanionMode
 from compagnon.core.events import InputEvent, Kind
 from compagnon.display.drawing import blit_center, rounded_rect, wrap_text
+from compagnon.display.theme import LOGICAL_H, LOGICAL_W, font_path
 
-W, H = 1024, 720
+W, H = LOGICAL_W, LOGICAL_H  # drawn on the logical canvas, scaled by the display
 Action = Callable[[], list[InputEvent] | None]
 
 
@@ -28,9 +29,9 @@ class CompanionScreen:
         self.tab = "reglages"
         self.confirm: str | None = None
         self._targets: list[tuple[pygame.Rect, Action]] = []
-        self.f_small = pygame.font.SysFont("verdana,dejavusans,arial", 20)
-        self.f_mid = pygame.font.SysFont("verdana,dejavusans,arial", 24, bold=True)
-        self.f_big = pygame.font.SysFont("verdana,dejavusans,arial", 30, bold=True)
+        self.f_small = pygame.font.Font(font_path(), 22)
+        self.f_mid = pygame.font.Font(font_path(True), 26)
+        self.f_big = pygame.font.Font(font_path(True), 32)
 
     # ------------------------------------------------------------ control
     def open(self) -> None:
@@ -130,7 +131,7 @@ class CompanionScreen:
 
     def _render_menu(self, s: pygame.Surface, pal: dict) -> None:
         n_q = len(self.mode.questions())
-        tabs = (("reglages", "Réglages"), ("questions", f"Questions ({n_q})"),
+        tabs = (("reglages", "Réglages"), ("jeux", "Jeux"), ("questions", f"Questions ({n_q})"),
                 ("donnees", "Données"))
         for i, (tid, label) in enumerate(tabs):
             r = pygame.Rect(20 + i * 230, 12, 215, 52)
@@ -139,6 +140,8 @@ class CompanionScreen:
         self._button(s, pal, pygame.Rect(W - 190, 12, 170, 52), "Fermer", self._close, "pause")
         if self.tab == "reglages":
             self._render_settings(s, pal)
+        elif self.tab == "jeux":
+            self._render_games(s, pal)
         elif self.tab == "questions":
             self._render_questions(s, pal)
         else:
@@ -154,16 +157,42 @@ class CompanionScreen:
         per_col = (len(specs) + 1) // 2
         for i, spec in enumerate(specs):
             col, row = divmod(i, per_col)
-            x, y = 20 + col * 502, 82 + row * 70
-            box = pygame.Rect(x, y, 482, 60)
+            x, y = 20 + col * 630, 82 + row * 70
+            box = pygame.Rect(x, y, 610, 60)
             rounded_rect(s, pal["bg"], box, 10)
             s.blit(self.f_small.render(spec.label, True, pal["text"]), (x + 12, y + 8))
             s.blit(self.f_small.render(self.mode.value_label(spec.key), True, pal["soft_text"]),
                    (x + 12, y + 32))
             for j, (label, step) in enumerate((("-", -1), ("+", 1))):
-                r = pygame.Rect(x + 370 + j * 56, y + 8, 46, 44)
+                r = pygame.Rect(x + 494 + j * 56, y + 8, 46, 44)
                 self._button(s, pal, r, label,
                              lambda k=spec.key, st=step: self.mode.adjust(k, st))  # type: ignore[misc]
+
+    def _render_games(self, s: pygame.Surface, pal: dict) -> None:
+        """FP4: which games appear on the child's home screen, and in which order.
+        The cards keep this order from one session to the next (FC1)."""
+        blit_center(s, self.f_small, "Jeux affichés sur l'écran d'accueil de l'enfant "
+                    "(dans cet ordre).", pal["soft_text"], (W // 2, 92))
+        for i, (entry, visible) in enumerate(self.mode.games()):
+            y = 122 + i * 84
+            box = pygame.Rect(20, y, W - 40, 72)
+            rounded_rect(s, pal["bg"] if visible else pal["header"], box, 12)
+            pos = f"{i + 1}." if visible else "-"
+            s.blit(self.f_mid.render(f"{pos}  {entry.title}", True, pal["text"]), (40, y + 8))
+            s.blit(self.f_small.render(entry.description, True, pal["soft_text"]), (40, y + 40))
+            label = "Affiché" if visible else "Caché"
+            self._button(s, pal, pygame.Rect(W - 520, y + 10, 170, 52), label,
+                         lambda g=entry.id: self._toggle_game(g),  # type: ignore[misc]
+                         "fini" if visible else "pause", self.f_small)
+            if visible:
+                for j, (arrow, step) in enumerate((("Monter", -1), ("Descendre", 1))):
+                    r = pygame.Rect(W - 335 + j * 160, y + 10, 150, 52)
+                    self._button(s, pal, r, arrow,
+                                 lambda g=entry.id, st=step: self.mode.move_game(g, st),  # type: ignore[misc]
+                                 "aide", self.f_small)
+
+    def _toggle_game(self, game_id: str) -> None:
+        self.message = self.mode.toggle_game(game_id) or ""
 
     def _render_questions(self, s: pygame.Surface, pal: dict) -> None:
         qs = self.mode.questions()

@@ -1,7 +1,7 @@
 {
   "id": "couleurs",
   "titre": "Les couleurs",
-  "annonce": "Maintenant, on joue avec les couleurs.",
+  "annonce": "On va jouer avec les couleurs.",
   "fin": "Bravo, on a fini les couleurs !",
   "niveaux": {
     "1": {"choix": 2, "couleurs": ["rouge", "bleu", "jaune", "vert"]},

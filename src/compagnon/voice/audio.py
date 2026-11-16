@@ -151,6 +151,11 @@ class PygameVoice:
             self._voice_channel.stop()
         self._voice_channel = snd.play(fade_ms=FADE_MS)
 
+    def is_speaking(self) -> bool:
+        """True while a sentence is playing (the character's mouth moves)."""
+        ch = self._voice_channel
+        return bool(ch is not None and ch.get_busy())
+
     def stop(self) -> None:
         pygame.mixer.fadeout(150)
 

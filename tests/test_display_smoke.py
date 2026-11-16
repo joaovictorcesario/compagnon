@@ -28,7 +28,7 @@ def disp(data_paths):
                          pin_store=PinStore(data_paths.pin),
                          profile_store=ProfileStore(data_paths.profiles),
                          profile=ChildProfile("x"), clock=FakeClock())
-    d = PygameDisplay(Settings(), comp, rewards_dir=data_paths.rewards)
+    d = PygameDisplay(Settings(), comp, rewards_dir=data_paths.rewards, size=(1280, 720))
     yield d
     pygame.quit()
 
@@ -72,16 +72,14 @@ def test_clicks_map_to_events(disp):
     disp.show_scene(Scene(act.title, item.instruction, item.image, tuple(item.choices)))
     disp.render()
     pygame.event.clear()
-    _click((40 + 142, 720 - 62))  # "Aide"
-    _click((40 + 330 + 142, 720 - 62))  # "Pause"
-    _click((40 + 660 + 142, 720 - 62))  # "J'ai fini"
-    _click((818, 175))  # drawn speaker icon
-    _click((500, 30))  # header -> background
+    # positions come from the layout itself (it changed with the new design)
+    for kind in (Kind.HELP, Kind.PAUSE, Kind.FINISHED, Kind.REPEAT):
+        _click(disp.target_for(kind).center)
+    _click((640, 100))  # empty area under the title -> background
     kinds = [e.kind for e in disp.poll_events()]
     assert kinds == [Kind.HELP, Kind.PAUSE, Kind.FINISHED, Kind.REPEAT, Kind.BACKGROUND]
     # a balloon
-    spacing = (1024 - 120) / 2
-    _click((int(60 + spacing * 0.5), 405))
+    _click(disp.target_for(Kind.CHOICE, item.choices[0].id).center)
     ev = disp.poll_events()[0]
     assert ev.kind == Kind.CHOICE and ev.value == item.choices[0].id
 
@@ -109,13 +107,16 @@ def test_custom_character_from_images(tmp_path, disp):
     char = load_character(folder)
     assert isinstance(char, SpriteCharacter)
     disp.character = char
-    disp.announce_activity("Les couleurs", "Maintenant, on joue avec les couleurs.")
+    disp.announce_activity("Les couleurs", "On va jouer avec les couleurs.")
     disp.render()
-    assert _near(disp.screen.get_at((512, 230)), (60, 160, 90))  # "content" sprite drawn
-    disp.show_end("fin")
-    disp.set_expression("calme")  # missing image -> neutre
+    disp.skip_transition()
     disp.render()
-    assert _near(disp.screen.get_at((512, 230)), (200, 120, 60))
+    assert _near(disp.screen.get_at(disp.view.p(300, 236)), (60, 160, 90))  # "content" sprite
+    disp.show_pause("C'est la pause.")  # "calme": missing image -> neutre
+    disp.render()
+    disp.skip_transition()
+    disp.render()
+    assert _near(disp.screen.get_at(disp.view.p(640, 230)), (200, 120, 60))
     assert isinstance(load_character(tmp_path / "absent"), GeometricCharacter)
 
 
@@ -126,7 +127,84 @@ def test_repeat_emphasizes_the_bubble(disp):
     item = act.make_item(1, random.Random(1))
     disp.show_scene(Scene(act.title, item.instruction, item.image, tuple(item.choices)))
     disp.render()
-    normal = disp.screen.get_at((300, 120))[:3]
+    disp.skip_transition()
+    disp.render()
+    inside_bubble = disp.view.p(320, 140)
+    normal = disp.screen.get_at(inside_bubble)[:3]
     disp.emphasize_instruction()
     disp.render()
-    assert disp.screen.get_at((300, 120))[:3] != normal
+    assert disp.screen.get_at(inside_bubble)[:3] != normal
+
+
+# ------------------------------------------------------------------ app screens
+def _show(disp):
+    disp.render()
+    disp.skip_transition()
+    disp.render()
+
+
+def test_menu_cards_start_and_describe_games(disp):
+    from compagnon.activities import CATALOG
+
+    disp.show_menu(CATALOG.entries())
+    _show(disp)
+    pygame.event.clear()
+    _click(disp.target_for(Kind.DESCRIBE, "couleurs").center)
+    _click(disp.target_for(Kind.START, "couleurs").center)
+    evs = disp.poll_events()
+    assert [(e.kind, e.value) for e in evs] == [(Kind.DESCRIBE, "couleurs"),
+                                               (Kind.START, "couleurs")]
+    assert disp.current.id == "couleurs"
+
+
+def test_home_button_asks_before_leaving(disp):
+    import random
+
+    act = ColorActivity()
+    item = act.make_item(1, random.Random(1))
+    disp.show_scene(Scene(act.title, item.instruction, item.image, tuple(item.choices)))
+    _show(disp)
+    pygame.event.clear()
+    _click(disp.view.p(54, 43))  # "Maison" (top left)
+    assert disp.poll_events() == [] and disp.confirm_home
+    _show(disp)
+    assert disp.target_for(Kind.HELP) is None  # only the two choices are active
+    _click(disp.target_for(Kind.MENU).center)
+    assert [e.kind for e in disp.poll_events()] == [Kind.MENU]
+    assert not disp.confirm_home
+
+
+def test_schedule_follows_the_reward_setting(disp):
+    disp.apply_settings(Settings())
+    assert [s[0] for s in disp._steps()] == ["D'abord", "Ensuite", "Fin"]
+    disp.apply_settings(Settings(reward="aucune"))
+    assert [s[0] for s in disp._steps()] == ["D'abord", "Fin"]
+
+
+def test_progress_and_stars_follow_the_game(disp):
+    import random
+
+    act = ColorActivity()
+    disp.announce_activity(act.title, act.announce_text)
+    for seed in range(3):
+        item = act.make_item(1, random.Random(seed))
+        disp.show_scene(Scene(act.title, item.instruction, item.image, tuple(item.choices)))
+        disp.set_expression("encourage")  # wrong answer: no progress
+        disp.show_reward(RewardView("etoile"))
+        disp.set_expression("content")  # right answer
+    assert disp.rounds_done == 3 and disp.stars == 3
+    disp.show_end(act.end_text)
+    _show(disp)
+
+
+@pytest.mark.parametrize("size", [(1280, 720), (1920, 1080), (1024, 768)])
+def test_window_scales_proportionally(disp, size):
+    from compagnon.activities import CATALOG
+
+    disp.resize(size)
+    disp.show_menu(CATALOG.entries())
+    _show(disp)
+    card = disp.target_for(Kind.START, "couleurs")
+    k = min(size[0] / 1280, size[1] / 720)
+    assert abs(card.width - 520 * k) <= 2
+    assert disp.screen.get_rect().contains(card)

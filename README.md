@@ -30,11 +30,23 @@ python -m pip install -e ".[voix,dev]"
 
 ### Voix française (Piper, une seule fois)
 
-Le dossier de données est `%APPDATA%\compagnon` (il est créé au premier lancement).
+Depuis le dossier du projet, télécharger les modèles dans `voix\` (hors git) :
 
 ```powershell
-python -m piper.download_voices fr_FR-siwis-medium fr_FR-upmc-medium --data-dir "$env:APPDATA\compagnon\voix"
+python -m piper.download_voices fr_FR-siwis-medium fr_FR-upmc-medium --data-dir voix
 ```
+
+Les modèles sont cherchés dans cet ordre : `$env:COMPAGNON_VOIX`,
+`%APPDATA%\compagnon\voix`, `<projet>\voix`, `.\voix`. Pour vérifier (affiche où il a
+cherché, puis dit une phrase) :
+
+```powershell
+python -m compagnon.tools.verifier_voix
+```
+
+> Si la voix a été téléchargée par une application empaquetée (Microsoft Store, certains
+> assistants), Windows peut rediriger `%APPDATA%` vers un dossier privé de cette
+> application : utiliser alors le dossier `voix\` du projet.
 
 Piper n'a pas de voix d'enfant en français : les préréglages montent la hauteur de la voix
 (sans accélérer le débit) pour une voix plus douce et plus jeune. Choix avec `--voix` :

@@ -69,12 +69,25 @@ class PiperEngine:
             wf.writeframes(frames)
 
 
+PROJECT_VOICES = Path(__file__).resolve().parents[3] / "voix"  # <dépôt>/voix (hors git)
+
+
+def voice_dirs(data_voices: Path) -> list[Path]:
+    """Where to look for Piper models, in order: $COMPAGNON_VOIX, the data folder, then the
+    project's own `voix/` folder and `./voix` (useful when AppData is redirected)."""
+    dirs = [Path(p) for p in [os.environ.get("COMPAGNON_VOIX")] if p]
+    dirs += [data_voices, PROJECT_VOICES, Path.cwd() / "voix"]
+    return list(dict.fromkeys(dirs))
+
+
 def load_engine(voices_dir: Path, voice_name: str = DEFAULT_VOICE) -> PiperEngine | None:
     preset = resolve_voice(voice_name)
-    model = voices_dir / f"{preset.model}.onnx"
-    if not model.exists():
-        print(f"[voix] modèle « {preset.model} » absent de {voices_dir} : texte seulement. "
-              "(voir README)")
+    dirs = voice_dirs(voices_dir)
+    model = next((d / f"{preset.model}.onnx" for d in dirs
+                  if (d / f"{preset.model}.onnx").exists()), None)
+    if model is None:
+        print(f"[voix] modèle « {preset.model} » introuvable dans : "
+              + " ; ".join(str(d) for d in dirs) + " -> texte seulement (voir README)")
         return None
     try:
         return PiperEngine(model, preset.speaker, preset.semitones)

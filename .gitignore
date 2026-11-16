@@ -8,6 +8,7 @@ build/
 dist/
 # Donnees locales (profils, journaux, voix) : jamais dans git
 donnees/
+voix/
 *.onnx
 *.onnx.json
 *.jsonl

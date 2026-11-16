@@ -6,9 +6,9 @@ import random
 
 import pytest
 
-from compagnon.activities import ColorActivity
-from compagnon.ai.filter import FORBIDDEN, SentenceFilter, clean_llm_output, load_default_lexicon
-from compagnon.core import phrases
+from compagnon import phrases
+from compagnon.ia import FORBIDDEN, SentenceFilter, clean_llm_output, load_default_lexicon
+from compagnon.jeux import ColorActivity
 
 
 @pytest.fixture(scope="module")

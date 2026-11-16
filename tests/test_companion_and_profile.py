@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from compagnon.child import ChildProfile, ProfileStore, apply_answer, best_hint_level
-from compagnon.companion import CompanionMode, PinStore
-from compagnon.core.clock import FakeClock
-from compagnon.core.events import Kind
-from compagnon.core.settings import SettingsStore
+from compagnon.adulte import CompanionMode, PinStore
+from compagnon.enfant import ChildProfile, ProfileStore, apply_answer, best_hint_level
+from compagnon.reglages import FakeClock, Kind, SettingsStore
 
 
 @pytest.fixture
@@ -104,8 +102,8 @@ def test_learning_pause_freezes_everything(make_session):
 
 
 def test_sensitivity_has_a_floor():
-    from compagnon.core.settings import Settings
-    from compagnon.overload import thresholds_for
+    from compagnon.enfant import thresholds_for
+    from compagnon.reglages import Settings
 
     t = thresholds_for(Settings(), 99)
     assert t.clicks == 3 and t.errors == 4 and t.pause_interval_s == 90

@@ -1,6 +1,12 @@
-from compagnon.core.settings import VOICE_CHOICES, Settings
-from compagnon.voice.presets import DEFAULT_VOICE, VOICE_PRESETS, resolve_voice
-from compagnon.voice.sounds import ATTACK_S, PEAK, success_samples
+from compagnon.reglages import VOICE_CHOICES, Settings
+from compagnon.voix import (
+    ATTACK_S,
+    DEFAULT_VOICE,
+    PEAK,
+    VOICE_PRESETS,
+    resolve_voice,
+    success_samples,
+)
 
 
 def test_presets():

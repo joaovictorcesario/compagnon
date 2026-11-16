@@ -14,9 +14,8 @@ from collections import Counter
 
 import pytest
 
-from compagnon.ai import AIService, OllamaRephraser, SentenceFilter
-from compagnon.ai.filter import FORBIDDEN
-from compagnon.tools.benchmark_llm import FALLBACK_LIMIT, contexts
+from compagnon.ia import FORBIDDEN, AIService, OllamaRephraser, SentenceFilter
+from outils.benchmark_llm import FALLBACK_LIMIT, contexts
 
 MODEL = os.environ.get("COMPAGNON_MODELE", "qwen2.5:1.5b")
 PROMPT = os.environ.get("COMPAGNON_PROMPT", "normal")

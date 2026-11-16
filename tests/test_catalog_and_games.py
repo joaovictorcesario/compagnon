@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from compagnon.activities import CATALOG, ColorActivity, build_activities
-from compagnon.activities.catalog import MAX_VISIBLE, Catalog, CatalogEntry
-from compagnon.child import ChildProfile, ProfileStore
-from compagnon.companion import CompanionMode, PinStore
-from compagnon.core.clock import FakeClock
-from compagnon.core.settings import SettingsStore
+from compagnon.adulte import CompanionMode, PinStore
+from compagnon.enfant import ChildProfile, ProfileStore
+from compagnon.jeux import (
+    CATALOG,
+    MAX_VISIBLE,
+    Catalog,
+    CatalogEntry,
+    ColorActivity,
+    build_activities,
+)
+from compagnon.reglages import FakeClock, SettingsStore
 
 
 def entry(gid: str, title: str = "") -> CatalogEntry:

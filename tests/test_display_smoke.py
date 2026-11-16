@@ -11,18 +11,21 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 import pygame  # noqa: E402
 import pytest  # noqa: E402
 
-from compagnon.activities import ColorActivity  # noqa: E402
-from compagnon.child import ChildProfile, ProfileStore  # noqa: E402
-from compagnon.companion import CompanionMode, PinStore  # noqa: E402
-from compagnon.core.clock import FakeClock  # noqa: E402
-from compagnon.core.events import Kind  # noqa: E402
-from compagnon.core.settings import Settings, SettingsStore  # noqa: E402
-from compagnon.display.base import RewardView, Scene  # noqa: E402
+from compagnon.adulte import CompanionMode, PinStore  # noqa: E402
+from compagnon.enfant import ChildProfile, ProfileStore  # noqa: E402
+from compagnon.jeux import ColorActivity  # noqa: E402
+from compagnon.reglages import (  # noqa: E402
+    FakeClock,  # noqa: E402
+    Kind,  # noqa: E402
+    Settings,
+    SettingsStore,
+)
+from compagnon.seance import RewardView, Scene  # noqa: E402
 
 
 @pytest.fixture
 def disp(data_paths):
-    from compagnon.display.pygame_display import PygameDisplay
+    from compagnon.ecran import PygameDisplay
 
     comp = CompanionMode(paths=data_paths, settings_store=SettingsStore(data_paths.settings),
                          pin_store=PinStore(data_paths.pin),
@@ -96,7 +99,7 @@ def test_companion_screens_render(disp):
 
 def test_custom_character_from_images(tmp_path, disp):
     """Future custom character: one PNG per expression; missing ones fall back to neutre."""
-    from compagnon.display.character import GeometricCharacter, SpriteCharacter, load_character
+    from compagnon.dessin import GeometricCharacter, SpriteCharacter, load_character
 
     folder = tmp_path / "personnage"
     folder.mkdir()
@@ -144,7 +147,7 @@ def _show(disp):
 
 
 def test_menu_cards_start_and_describe_games(disp):
-    from compagnon.activities import CATALOG
+    from compagnon.jeux import CATALOG
 
     disp.show_menu(CATALOG.entries())
     _show(disp)
@@ -199,7 +202,7 @@ def test_progress_and_stars_follow_the_game(disp):
 
 @pytest.mark.parametrize("size", [(1280, 720), (1920, 1080), (1024, 768)])
 def test_window_scales_proportionally(disp, size):
-    from compagnon.activities import CATALOG
+    from compagnon.jeux import CATALOG
 
     disp.resize(size)
     disp.show_menu(CATALOG.entries())

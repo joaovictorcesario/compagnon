@@ -40,9 +40,9 @@ if errorlevel 1 goto erreur
 copy /y pyproject.toml .venv\pyproject.installe >nul
 :biblio_ok
 
-rem --- 4. Voix francaise (une seule fois, environ 120 Mo) -------------
+rem --- 4. Voix francaise : livree dans le dossier voix (secours si absente)
 if exist "voix\fr_FR-upmc-medium.onnx" goto voix_ok
-echo   [3/3] Telechargement de la voix francaise - environ 120 Mo, une seule fois...
+echo   [3/3] Voix absente : telechargement, environ 140 Mo, une seule fois...
 "%VPY%" -m piper.download_voices fr_FR-siwis-medium fr_FR-upmc-medium --data-dir voix
 if errorlevel 1 echo   Voix non telechargee : le compagnon marchera quand meme, sans voix.
 :voix_ok
@@ -50,8 +50,8 @@ if errorlevel 1 echo   Voix non telechargee : le compagnon marchera quand meme, 
 rem --- 5. Lancement ----------------------------------------------------
 rem  IA locale : utilisee si Ollama est installe, sinon phrases preparees.
 set "OPTIONS=--ia ollama"
-rem  Personnage dessine par le groupe : images dans le dossier "personnage".
-if exist "personnage\neutre.png" set "OPTIONS=%OPTIONS% --personnage personnage"
+rem  Personnage dessine par le groupe : images dans "contenu\personnage".
+if exist "contenu\personnage\neutre.png" set "OPTIONS=%OPTIONS% --personnage contenu\personnage"
 if defined COMPAGNON_SANS_LANCER goto fin
 echo.
 echo   Ouverture du compagnon... (ne pas fermer cette fenetre noire)

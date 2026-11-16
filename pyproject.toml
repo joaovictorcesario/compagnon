@@ -17,22 +17,21 @@ dev = ["pytest>=8", "ruff>=0.6"]
 [project.scripts]
 compagnon = "compagnon.app:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = ["compagnon", "compagnon.polices"]
 
 [tool.setuptools.package-data]
-"compagnon.content" = ["*.json"]
-"compagnon.ai" = ["*.txt"]
-"compagnon.assets.fonts" = ["*.ttf", "*.txt"]
+"compagnon.polices" = ["*.ttf", "*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = ["llm: appelle un vrai modele Ollama local (lent, a lancer avec -m llm)"]
 addopts = "-m 'not llm'"
 
 [tool.ruff]
 line-length = 100
-src = ["src", "tests"]
+src = [".", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]

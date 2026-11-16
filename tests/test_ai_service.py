@@ -7,10 +7,8 @@ import time
 
 import pytest
 
-from compagnon.activities import ColorActivity
-from compagnon.ai import AIService, SentenceFilter, StubRephraser
-from compagnon.ai.filter import FORBIDDEN
-from compagnon.ai.rephraser import OllamaRephraser
+from compagnon.ia import FORBIDDEN, AIService, OllamaRephraser, SentenceFilter, StubRephraser
+from compagnon.jeux import ColorActivity
 
 
 def _ctx(color: str) -> dict:
@@ -115,7 +113,7 @@ def test_ollama_host_must_be_local():
 
 
 def test_ai_phrase_is_logged_with_its_source(make_session):
-    from compagnon.core.events import Kind
+    from compagnon.reglages import Kind
 
     ai = AIService(ScriptedRephraser(GOOD), SentenceFilter.default())
     h = make_session(ai=ai)

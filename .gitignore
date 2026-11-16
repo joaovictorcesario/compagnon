@@ -6,9 +6,7 @@ __pycache__/
 .ruff_cache/
 build/
 dist/
-# Donnees locales (profils, journaux, voix) : jamais dans git
+# Donnees locales (profils, journaux) : jamais dans git
+# (les voix, elles, sont livrees dans voix/)
 donnees/
-voix/
-*.onnx
-*.onnx.json
 *.jsonl

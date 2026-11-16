@@ -1,1 +1,0 @@
-"""Bundled assets (fonts). Offline."""

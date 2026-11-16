@@ -35,9 +35,10 @@ py -3.12 -m venv .venv
 python -m pip install -e ".[voix,dev]"
 ```
 
-### Voix française (Piper, une seule fois)
+### Voix française (Piper)
 
-Depuis le dossier du projet, télécharger les modèles dans `voix\` (hors git) :
+Les deux voix (`fr_FR-siwis-medium`, `fr_FR-upmc-medium`, ~140 Mo) sont **livrées dans
+`voix\`** avec le dépôt : rien à télécharger. Pour les retélécharger si besoin :
 
 ```powershell
 python -m piper.download_voices fr_FR-siwis-medium fr_FR-upmc-medium --data-dir voix
@@ -48,7 +49,7 @@ Les modèles sont cherchés dans cet ordre : `$env:COMPAGNON_VOIX`,
 cherché, puis dit une phrase) :
 
 ```powershell
-python -m compagnon.tools.verifier_voix
+python outils\verifier_voix.py
 ```
 
 > Si la voix a été téléchargée par une application empaquetée (Microsoft Store, certains
@@ -79,7 +80,7 @@ code : déposer une image par expression dans `%APPDATA%\compagnon\personnage\` 
 alternée pendant que la voix parle). PNG carré à fond transparent, n'importe quelle taille ;
 une expression manquante utilise `neutre.png`. Pas de clignotement : seule une
 « respiration » lente et la bouche qui bouge pendant la parole, les deux coupées si les
-animations sont désactivées. Code : `src/compagnon/display/character.py` (interface
+animations sont désactivées. Code : `compagnon/dessin.py` (partie 4) (interface
 `Character`).
 
 ### Écrans et design
@@ -93,20 +94,20 @@ sert le jeu. Bouton *Maison* discret en haut à gauche du jeu, avec confirmation
 pictogrammes (pas de sortie par erreur).
 
 * **Calme** (FC2) : tous les choix visuels sont des *tokens* dans
-  `src/compagnon/display/theme.py` (fond, surface, texte, contour, 3 couleurs d'accent,
+  `compagnon/apparence.py` (fond, surface, texte, contour, 3 couleurs d'accent,
   rayons, ombres). Les 3 palettes du mode accompagnant en sont dérivées. Contraste du texte
   ≥ 4,5:1 vérifié par `tests/test_theme.py`. Rien ne clignote ; fondu ≤ 250 ms entre les
   écrans, supprimé quand les animations sont désactivées.
 * **Police** : Andika (SIL Open Font License, conçue pour l'apprentissage de la lecture),
-  incluse dans `src/compagnon/assets/fonts/` : fonctionne hors ligne.
+  incluse dans `compagnon/polices/` : fonctionne hors ligne.
 * **Fenêtre** redimensionnable, tout est mis à l'échelle (canevas logique 1280×720) ;
   **F11** ou `--plein-ecran` pour le plein écran.
 * **Ajouter un jeu** : écrire l'activité, puis une entrée dans
-  `src/compagnon/activities/catalog.py` (titre, phrase de description, illustration,
+  `compagnon/jeux.py` (partie 3) (titre, phrase de description, illustration,
   couleur de carte parmi les accents). La carte apparaît seule, après les cartes existantes.
 * **Captures automatiques** de tous les écrans (1280×720 et 1920×1080) :
   ```powershell
-  python -m compagnon.tools.captures
+  python outils\captures.py
   ```
   Résultat dans `docs/captures/`. Le menu à 4 cartes y utilise des jeux fictifs, jamais
   présents dans l'application.
@@ -158,7 +159,7 @@ Code par défaut **1234** : le changer dans *Données → Changer le code* (stoc
    ```
 3. **Benchmark sur VOTRE PC** (latence, taux de timeout, de rejet et de réserve) :
    ```powershell
-   python -m compagnon.tools.benchmark_llm --modele qwen2.5:1.5b qwen2.5:0.5b --prompt normal court -n 50 --sortie bench.json
+   python outils\benchmark_llm.py --modele qwen2.5:1.5b qwen2.5:0.5b --prompt normal court -n 50 --sortie bench.json
    ```
    Règle du groupe : si le **taux de réserve dépasse ~20 %**, raccourcir le prompt
    (`--prompt court`) ou passer à `qwen2.5:0.5b`. En démonstration, l'IA doit vraiment
@@ -187,7 +188,7 @@ Code par défaut **1234** : le changer dans *Données → Changer le code* (stoc
 
 **Fonctionnement** : le modèle ne fait que *formuler* (la couleur cible et les associations
 « rouge → fraise, tomate… » viennent du fichier de contenu, l'IA n'invente pas de faits).
-Chaque phrase passe par le filtre (`src/compagnon/ai/filter.py`) :
+Chaque phrase passe par le filtre (`compagnon/ia.py`, partie 1) :
 
 * une seule phrase, **10 mots maximum**, lettres et ponctuation simple ;
 * chaque mot appartient au **vocabulaire simple** (`ai/lexique_simple.txt`) + mots de
@@ -234,7 +235,7 @@ aussi de **script de démonstration** :
 **Observateur en direct** pendant un jeu de rôle (dans un 2e terminal) :
 
 ```powershell
-python -m compagnon.tools.tail_log
+python outils\tail_log.py
 ```
 
 Affiche chaque événement avec son temps : question, réponse, aide, `IA`/`RES` (source de
@@ -251,32 +252,34 @@ la phrase), surcharge, pause… Les journaux sont dans `%APPDATA%\compagnon\jour
           └──────▲ commandes : announce_activity, show_scene, show_reward, │ événements│
                  │ propose_pause, show_pause, set_calm, show_end…          ▼ (Kind.*)  │
 ┌────────────────┴─────────────────────────────────────────────────────────────────────┐
-│                       SessionController (core/controller.py)                         │
+│                       SessionController (compagnon/seance.py)                        │
 │         handle(événement) / tick()  — pur, synchrone, testable sans écran            │
 ├──────────────┬──────────────┬───────────────┬──────────────────┬─────────────────────┤
-│ activities/  │ adaptation/  │ overload/     │ ai/              │ companion/          │
+│ jeux.py      │ seance.py    │ enfant.py     │ ia.py            │ adulte.py           │
 │ couleurs     │ 5 niveaux    │ silence, clics│ Rephraser (stub, │ code, réglages,     │
 │ (JSON)       │ d'aide +     │ erreurs, pause│ Ollama) → filtre │ questions à l'adulte│
 │              │ difficulté   │ sensibilité   │ → phrases préparées                    │
 ├──────────────┴──────────────┴───────────────┴──────────────────┴─────────────────────┤
-│ child/ profil (niveau, aides efficaces, préférences, sensibilité, pause, reset)      │
-│ logs/ journal JSONL     core/clock (RealClock / FakeClock)     perception/ (FP7)     │
+│ enfant.py profil (niveau, aides efficaces, préférences, sensibilité, pause, reset)   │
+│ seance.py journal JSONL  reglages.py (RealClock / FakeClock)   enfant.py (FP7)       │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Module | Rôle | Exigences |
+Le code est **à plat** : un fichier par grande partie, chacun commence par un sommaire
+(« PARTIE 1, 2… »). Tout le contenu modifiable sans programmer est dans `contenu/`.
+
+| Fichier | Rôle | Exigences |
 |---|---|---|
-| `core/controller.py` | orchestration de la séance | toutes |
-| `activities/` + `content/couleurs.json` | activité « couleurs », consignes, associations, phrases préparées | FP1, FC1, FC4 |
-| `adaptation/` | niveaux d'aide 1–5 (répéter, reformuler, indice, indice visuel, modèle à 2 choix) ; difficulté = nombre de choix 2/3/4/6 | FP2 |
-| `overload/` | seuils de surcharge et leur évolution avec la sensibilité | FP5, FP6 |
-| `ai/` | génération locale + filtre + réserve + timeout | FP3 |
-| `child/` | mémoire entre séances, questions à l'adulte, pause de l'apprentissage, reset | FP6 |
-| `companion/` | logique du mode accompagnant (sans écran) | FP4 |
-| `display/` | interface `Display` + version pygame + version de test | FC1–FC3, FC7 |
-| `voice/` | interface `Voice` + Piper/pygame | FC2, FC4 |
-| `perception/` | point d'extension FP7 (désactivé, rien n'est enregistré) | FP7, FC5 |
-| `tools/` | benchmark du modèle, suivi du journal en direct | V2, validation |
+| `compagnon/seance.py` | orchestration de la séance (`SessionController`), niveaux d'aide 1–5 et difficulté 2/3/4/6 choix, journal JSONL, interface `Display` | toutes, FP2 |
+| `compagnon/jeux.py` + `contenu/couleurs.json` | contrat `Activity`, activité « couleurs », catalogue des cartes d'accueil | FP1, FC1, FC4 |
+| `compagnon/enfant.py` | profil (mémoire entre séances, questions à l'adulte, reset), seuils de surcharge, point d'extension émotion FP7 (désactivé) | FP5, FP6, FP7 |
+| `compagnon/ia.py` + `contenu/lexique_simple.txt` | génération locale + filtre + réserve + timeout | FP3 |
+| `compagnon/phrases.py` + `contenu/phrases.txt` | phrases fixes du personnage | FP3, FP5 |
+| `compagnon/adulte.py` | code, logique et écran du mode accompagnant | FP4 |
+| `compagnon/ecran.py`, `dessin.py`, `apparence.py` | écrans pygame, outils de dessin et personnage, jetons de design | FC1–FC3, FC7 |
+| `compagnon/voix.py` | interface `Voice` + Piper/pygame, son de réussite | FC2, FC4 |
+| `compagnon/reglages.py` | réglages, dossiers de données, horloge, événements | — |
+| `outils/` | captures d'écran, benchmark du modèle, suivi du journal, test de la voix | V2, validation |
 
 ### Choix de réglage par défaut (à valider par le groupe)
 
@@ -307,9 +310,9 @@ python -m compagnon --voix fr_FR-siwis-low --plein-ecran
   (`SDL_VIDEODRIVER=kmsdrm`). Voix Piper `low` ou `medium` plus rapides que le temps réel.
 * **IA sur le Pi** : `qwen2.5:0.5b` via Ollama (ARM64) ; mesurer avec le benchmark. Si
   le taux de réserve est trop élevé, solution prévue : un générateur « cache » (nouvelle
-  classe dans `ai/rephraser.py`) qui lit des reformulations **générées et filtrées à
+  classe dans `compagnon/ia.py`, partie 3) qui lit des reformulations **générées et filtrées à
   l'avance sur le PC**, toujours hors ligne.
-* **Robot (FC7)** : écrire `RobotDisplay` qui implémente `display/base.py::Display`
+* **Robot (FC7)** : écrire `RobotDisplay` qui implémente `compagnon/seance.py::Display`
   (visage sur un petit écran, moteur de tête via `gpiozero`, boutons physiques ou écran
   tactile → mêmes `InputEvent`). Le reste du code ne change pas.
 
@@ -318,7 +321,8 @@ python -m compagnon --voix fr_FR-siwis-low --plein-ecran
 ## 6. Données et confidentialité
 
 * Tout reste dans le dossier de données local (profils, réglages, code haché, journaux,
-  cache de voix) ; rien n'est dans git (`.gitignore`).
+  cache de voix) ; rien de cela n'est dans git (`.gitignore`). Seuls les modèles de voix
+  (publics) sont livrés dans `voix\`.
 * Les journaux identifient l'enfant par pseudonyme uniquement.
 * Pas de caméra ni de micro en S7. Le point d'extension FP7 exige un traitement en mémoire,
   sans enregistrement.

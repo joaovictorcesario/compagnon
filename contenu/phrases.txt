@@ -1,0 +1,35 @@
+# Phrases dites par le personnage.
+#
+# Ne changez que le texte APRÈS le signe "=" (pas de guillemets à mettre).
+# Règles (vérifiées par "Verifier mes modifications.bat") :
+#   - une seule phrase, 10 mots maximum ;
+#   - des mots simples (ils doivent être dans lexique_simple.txt) ;
+#   - jamais de mot d'échec (faux, raté, nul, erreur...).
+# Les lignes qui commencent par # sont des explications, ignorées par le jeu.
+
+# Après une mauvaise réponse
+WRONG = Essaie encore.
+
+# Aide niveau 4 : le bon ballon est mis en avant
+VISUAL_HINT = Regarde bien celui-ci.
+
+# Aide niveau 5 : le personnage montre la réponse
+MODEL = Regarde, c'est celui-là.
+
+# L'enfant semble fatigué : on propose une pause
+PAUSE_OFFER = Tu veux faire une pause ?
+
+# Pause prévue par l'adulte
+SCHEDULED_PAUSE_OFFER = On peut faire une petite pause.
+
+# Pendant la pause
+PAUSE = C'est la pause.
+
+# L'enfant a touché "J'ai fini"
+END_CHILD = D'accord, on s'arrête, merci et à bientôt !
+
+# L'enfant ne répond plus
+END_SILENCE = On s'arrête là pour aujourd'hui.
+
+# L'adulte arrête la séance
+END_ADULT = On s'arrête là pour aujourd'hui.

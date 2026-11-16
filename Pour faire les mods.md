@@ -10,8 +10,10 @@ logiciels à fenêtres et des doubles-clics.
 >    João sur GitHub, « cloner » le projet une fois.
 > 3. À chaque séance de travail : **Pull** → modifier → tester → **Vérifier** →
 >    **Commit** → **Push**.
-> 4. Les fichiers faciles à modifier sont listés dans la [partie 5](#5-le-plan-du-projet)
->    et expliqués un par un dans la [partie 6](#6-recettes--que-modifier-et-où).
+> 4. **Tout ce qu'on peut changer sans programmer est dans le dossier `contenu/`**
+>    (phrases, couleurs du jeu, mots, dessins du personnage). Le programme est dans
+>    `compagnon/` : un fichier par grande partie du jeu. Voir le
+>    [plan du projet](#5-le-plan-du-projet) et les [recettes](#6-recettes--que-modifier-et-où).
 
 ---
 
@@ -32,20 +34,22 @@ logiciels à fenêtres et des doubles-clics.
 ## 1. Juste jouer (sans rien modifier)
 
 1. Ouvrir <https://github.com/joaovictorcesario/compagnon>.
-2. Cliquer sur le bouton vert **`<> Code`**, puis **Download ZIP**.
+2. Cliquer sur le bouton vert **`<> Code`**, puis **Download ZIP** (environ 140 Mo : la
+   voix française est déjà dedans).
 3. Dans le dossier *Téléchargements*, faire un clic droit sur `compagnon-main.zip` →
    **Extraire tout…** → **Extraire**.
    ⚠️ Il faut extraire : ça ne marche pas si on lance depuis l'intérieur du ZIP.
 4. Dans le dossier extrait, **double-cliquer sur `Lancer le compagnon.bat`**.
 
 **La première fois**, une fenêtre noire s'ouvre et installe tout toute seule
-(environ 2 à 5 minutes, il faut Internet) :
+(environ 2 minutes, il faut Internet) :
 
 | Message affiché | Ce qui se passe |
 |---|---|
 | `[1/3] Preparation de Python pour le projet` | prépare un Python rien que pour le projet |
 | `[2/3] Installation des bibliotheques` | télécharge les « briques » du jeu (affichage, voix…) |
-| `[3/3] Telechargement de la voix francaise` | télécharge la voix (environ 120 Mo) |
+
+La voix, elle, est **déjà incluse** dans le dossier `voix` : rien à télécharger.
 
 Puis le compagnon s'ouvre. **Les fois suivantes**, il s'ouvre tout de suite, et il
 fonctionne **sans Internet**.
@@ -155,25 +159,54 @@ Légende : 🟢 facile, à modifier librement · 🟠 possible, avec précaution
 🔴 ne pas toucher sans en parler (c'est de la programmation).
 
 ```
-compagnon/
+compagnon/  (le dossier du projet)
+│
 ├── Lancer le compagnon.bat          ← double-clic : jouer
 ├── Verifier mes modifications.bat   ← double-clic : vérifier avant d'envoyer
 ├── Pour faire les mods.md           ← ce guide
 ├── README.md                        ← documentation technique (pour le rapport)
-├── personnage/                      🟢 (à créer) vos dessins du personnage, voir 6.7
-├── docs/captures/                   ← images de tous les écrans
-├── tests/                           🔴 les tests automatiques
-└── src/compagnon/
-    ├── content/couleurs.json        🟢 le jeu des couleurs : consignes, couleurs, indices
-    ├── core/phrases.py              🟢 les phrases dites par le personnage
-    ├── ai/lexique_simple.txt        🟢 les mots que l'IA a le droit d'utiliser
-    ├── activities/catalog.py        🟢 les cartes de l'écran d'accueil
-    ├── display/theme.py             🟢 les couleurs de l'écran, la taille du texte
-    ├── display/pygame_display.py    🟠 les textes des écrans (Bonjour, boutons…)
-    ├── voice/sounds.py              🟠 le son de bonne réponse
-    ├── core/settings.py             🟠 les réglages par défaut
-    ├── ai/filter.py                 🟠 les mots interdits
-    └── (tous les autres fichiers)   🔴 le fonctionnement du jeu
+│
+├── contenu/          🟢 TOUT CE QU'ON PEUT CHANGER SANS PROGRAMMER
+│   ├── phrases.txt          les phrases dites par le personnage
+│   ├── couleurs.json        le jeu des couleurs : consignes, couleurs, indices
+│   ├── lexique_simple.txt   les mots simples autorisés
+│   └── personnage/          (à créer) vos dessins du personnage
+│
+├── compagnon/        le programme : un fichier par grande partie du jeu
+│   ├── apparence.py   🟢 couleurs de l'écran, taille du texte
+│   ├── ecran.py       🟠 les écrans de l'enfant (« Bonjour ! », boutons…)
+│   ├── jeux.py        🟠 les jeux et les cartes de l'écran d'accueil
+│   ├── voix.py        🟠 la voix et le son de bonne réponse
+│   ├── reglages.py    🟠 les réglages par défaut
+│   ├── ia.py          🟠 l'IA et les mots interdits
+│   ├── seance.py      🔴 le déroulement d'une séance (le « cerveau »)
+│   ├── enfant.py      🔴 le profil de l'enfant, les signes de surcharge
+│   ├── adulte.py      🔴 le mode adulte et son écran
+│   ├── dessin.py      🔴 les outils de dessin et le personnage dessiné
+│   ├── phrases.py     🔴 lit contenu/phrases.txt
+│   ├── app.py         🔴 démarre tout
+│   └── polices/       la police d'écriture (Andika)
+│
+├── voix/             la voix française (déjà incluse, ne pas toucher)
+├── tests/            🔴 les vérifications automatiques
+├── outils/           petits programmes pour l'équipe (captures d'écran…)
+└── docs/             images de tous les écrans, résultats des mesures
+```
+
+**Pour avoir une vue d'ensemble :** chaque fichier de `compagnon/` commence par un
+**sommaire** (« Sommaire : 1. … 2. … »). Chaque partie est marquée dans le fichier par
+`PARTIE 1`, `PARTIE 2`… : avec **Ctrl + F** on y va directement.
+
+Le chemin d'une séance, du clic au son :
+
+```
+app.py  →  ecran.py   l'accueil : l'enfant touche une carte
+        →  seance.py  choisit la question, juge la réponse, décide de l'aide
+             ├── jeux.py    les couleurs, lues dans contenu/couleurs.json
+             ├── ia.py      reformule la phrase, si l'IA est installée
+             ├── voix.py    dit la phrase
+             └── enfant.py  retient ce qui aide l'enfant
+        →  ecran.py   affiche la question, les ballons, le personnage
 ```
 
 ---
@@ -183,7 +216,7 @@ compagnon/
 Pour trouver un texte n'importe où dans le projet : dans VS Code, **Ctrl + Maj + F**,
 puis taper le texte cherché. VS Code montre tous les fichiers où il apparaît.
 
-Quelques règles d'écriture, valables partout :
+Quelques règles d'écriture, valables dans les fichiers `.py` et `.json` :
 
 * Les textes sont **entre guillemets droits** `"comme ceci"`. Il ne faut jamais
   effacer les guillemets.
@@ -194,27 +227,28 @@ Quelques règles d'écriture, valables partout :
 
 ### 6.1 🟢 Les phrases du personnage
 
-**Fichier :** `src/compagnon/core/phrases.py`
+**Fichier :** `contenu/phrases.txt`
 
-```python
-WRONG = "Essaie encore."                 # après une mauvaise réponse
-VISUAL_HINT = "Regarde bien celui-ci."   # aide niveau 4
-MODEL = "Regarde, c'est celui-là."       # aide niveau 5
-PAUSE_OFFER = "Tu veux faire une pause ?"
-SCHEDULED_PAUSE_OFFER = "On peut faire une petite pause."
-PAUSE = "C'est la pause."
-END_CHILD = "D'accord, on s'arrête, merci et à bientôt !"
-END_SILENCE = "On s'arrête là pour aujourd'hui."
+C'est un simple fichier texte. Chaque phrase est sur une ligne, avec une explication
+au-dessus (les lignes qui commencent par `#`) :
+
+```
+# Après une mauvaise réponse
+WRONG = Essaie encore.
+
+# Pendant la pause
+PAUSE = C'est la pause.
 ```
 
-On change **seulement le texte entre guillemets**, jamais le nom à gauche du `=`.
+On change **seulement le texte après le signe `=`**, sans guillemets. On ne touche pas au
+nom en majuscules à gauche : c'est grâce à lui que le jeu sait quand dire la phrase.
 
-**Exemple :** `PAUSE = "C'est la pause."` → `PAUSE = "On se repose un peu."`
+**Exemple :** `PAUSE = C'est la pause.` → `PAUSE = On se repose un peu.`
 
 ⚠️ Chaque phrase est vérifiée automatiquement (cahier des charges FP3/FP5) :
 
 * **une seule phrase**, **10 mots maximum** ;
-* des **mots simples** : ils doivent se trouver dans `ai/lexique_simple.txt` (voir 6.3) ;
+* des **mots simples** : ils doivent se trouver dans `contenu/lexique_simple.txt` (voir 6.3) ;
 * **jamais de mot d'échec** (faux, raté, nul, erreur…) ni de mot médical.
 
 Si une règle n'est pas respectée, `Verifier mes modifications.bat` affiche **ATTENTION**.
@@ -224,7 +258,7 @@ elle peut mettre une seconde de plus.
 
 ### 6.2 🟢 Le jeu des couleurs
 
-**Fichier :** `src/compagnon/content/couleurs.json`
+**Fichier :** `contenu/couleurs.json`
 
 Ce fichier décrit tout le jeu. Il contient une partie **niveaux**, puis une partie par
 **couleur** :
@@ -277,7 +311,7 @@ juste avant.
 
 ### 6.3 🟢 Les mots autorisés pour l'IA
 
-**Fichier :** `src/compagnon/ai/lexique_simple.txt`
+**Fichier :** `contenu/lexique_simple.txt`
 
 C'est la liste des mots simples que l'IA (et les phrases préparées) ont le droit
 d'utiliser. Si `Verifier mes modifications.bat` refuse une phrase à cause d'un
@@ -287,13 +321,13 @@ d'utiliser. Si `Verifier mes modifications.bat` refuse une phrase à cause d'un
 * on peut en mettre plusieurs par ligne ;
 * une ligne qui commence par `#` est un commentaire (ignoré).
 
-Les **mots interdits** (échec, médical, grossier) sont dans `src/compagnon/ai/filter.py`,
-dans la liste `FORBIDDEN` (🟠 : on peut **ajouter** un mot interdit entre guillemets,
+Les **mots interdits** (échec, médical, grossier) sont dans `compagnon/ia.py`
+(partie 1), dans la liste `FORBIDDEN` (🟠 : on peut **ajouter** un mot interdit entre guillemets,
 suivi d'une virgule, mais ne jamais en retirer sans en parler).
 
 ### 6.4 🟠 Les textes des écrans
 
-**Fichier :** `src/compagnon/display/pygame_display.py`
+**Fichier :** `compagnon/ecran.py`
 
 | Texte à l'écran | Ce qu'il faut chercher (Ctrl + F) |
 |---|---|
@@ -305,11 +339,11 @@ suivi d'une virgule, mais ne jamais en retirer sans en parler).
 | « Reprendre », « Continuer », « Menu » | le mot lui-même |
 
 On ne change que le texte entre guillemets. Les phrases **dites** par le personnage
-sont dans `phrases.py` (6.1), pas ici.
+sont dans `contenu/phrases.txt` (6.1), pas ici.
 
 ### 6.5 🟢 Les couleurs de l'écran
 
-**Fichier :** `src/compagnon/display/theme.py`, partie `PALETTES`
+**Fichier :** `compagnon/apparence.py`, partie `PALETTES`
 
 Il y a trois palettes (`sable`, `ciel`, `menthe`) : l'adulte choisit dans le mode
 accompagnant. Chaque couleur est écrite `(Rouge, Vert, Bleu)` avec des nombres de
@@ -333,7 +367,7 @@ suffisant) : si vous foncez trop un fond, il affichera ATTENTION.
 
 ### 6.6 🟢 La taille du texte
 
-**Fichier :** `src/compagnon/display/theme.py`, partie `FONT_SIZES`
+**Fichier :** `compagnon/apparence.py`, partie `FONT_SIZES`
 
 ```python
 "moyen": (36, 30, 38),   # (consigne, boutons, titres)
@@ -360,9 +394,9 @@ nombres que si les trois tailles sont toutes trop petites ou trop grandes.
    | `ecoute.png` | attend la réponse de l'enfant |
    | `parle.png` (facultatif) | bouche ouverte : alternée avec les autres quand la voix parle |
 
-3. Créer un dossier **`personnage`** à la racine du projet (à côté de
-   `Lancer le compagnon.bat`) et y mettre les images.
-4. Relancer `Lancer le compagnon.bat` : il utilise le dossier `personnage`
+3. Créer un dossier **`personnage`** dans le dossier **`contenu`** (donc
+   `contenu/personnage/`) et y mettre les images.
+4. Relancer `Lancer le compagnon.bat` : il utilise le dossier `contenu/personnage`
    automatiquement.
 5. **Commit + Push** (partie 4) : tout le groupe aura le nouveau personnage.
 
@@ -371,7 +405,7 @@ dessiné d'origine, il suffit de renommer le dossier.
 
 ### 6.8 🟢 La carte du jeu sur l'écran d'accueil
 
-**Fichier :** `src/compagnon/activities/catalog.py`, tout en bas (`CATALOG = …`)
+**Fichier :** `compagnon/jeux.py`, partie 3, tout en bas (`CATALOG = …`)
 
 ```python
 CatalogEntry(
@@ -386,7 +420,7 @@ CatalogEntry(
 | `title` | le nom sous la carte | 🟢 |
 | `description` | la phrase dite quand on touche le petit haut-parleur de la carte | 🟢 (mêmes règles que 6.1) |
 | `color` | couleur de la carte : `"accent1"`, `"accent2"` ou `"accent3"` | 🟢 |
-| `icon` | `"ballons"` (dessin intégré) ou le chemin d'une image, ex. `"personnage/carte_couleurs.png"` | 🟢 |
+| `icon` | `"ballons"` (dessin intégré) ou le chemin d'une image, ex. `"contenu/personnage/carte_couleurs.png"` | 🟢 |
 | `id`, `factory` | le lien avec le programme du jeu | 🔴 |
 
 **Quels jeux apparaissent, et dans quel ordre** : ça ne se change pas ici, mais dans le
@@ -394,7 +428,7 @@ CatalogEntry(
 
 ### 6.9 🟠 Le son de bonne réponse
 
-**Fichier :** `src/compagnon/voice/sounds.py`
+**Fichier :** `compagnon/voix.py`, partie 3
 
 ```python
 NOTES_HZ = (392.00, 523.25, 659.25)  # G4, C5, E5  (sol, do, mi)
@@ -411,7 +445,7 @@ Presque tout se règle **sans code**, dans le **mode adulte → Réglages** : vo
 vitesse de la voix, son, palette, animations, taille du texte, niveau de départ, délais,
 pauses, récompense…
 
-Les valeurs **de départ** sont dans `src/compagnon/core/settings.py` (classe `Settings`).
+Les valeurs **de départ** sont dans `compagnon/reglages.py`, partie 1 (classe `Settings`).
 ⚠️ Les tests vérifient les scénarios du cahier des charges (15 s de silence, 3 erreurs…).
 Changer ces valeurs fera donc échouer la vérification **même si le jeu marche** :
 en parler au groupe avant.
@@ -419,11 +453,12 @@ en parler au groupe avant.
 ### 6.11 🔴 Ajouter un nouveau jeu (formes, animaux, émotions…)
 
 Là, il faut programmer. Le projet est prêt pour ça : un nouveau jeu = un fichier de
-programme dans `src/compagnon/activities/` + une entrée dans `catalog.py` (6.8). La carte
+programme dans `compagnon/jeux.py` (sur le modèle du jeu des couleurs, partie 2) + une
+entrée dans la liste des cartes (6.8). La carte
 apparaît alors toute seule sur l'écran d'accueil.
 
 Le plus simple : écrire le **contenu** (les questions, les réponses, les phrases, en
-s'inspirant de `couleurs.json`) et demander à João ou à un assistant de programmation
+s'inspirant de `contenu/couleurs.json`) et demander à João ou à un assistant de programmation
 de faire la partie programme.
 
 ---
@@ -437,7 +472,7 @@ ou de texte, et pour le rapport) :
 2. Copier-coller cette ligne, puis **Entrée** :
 
    ```
-   .venv\Scripts\python -m compagnon.tools.captures
+   .venv\Scripts\python outils\captures.py
    ```
 
 3. Les images sont créées dans `docs/captures/1280x720/` et `docs/captures/1920x1080/`.
@@ -451,7 +486,8 @@ ou de texte, et pour le rapport) :
 | « Python 3.12 n'est pas installé » | Laisser `Lancer le compagnon.bat` l'installer (`O`), ou l'installer depuis python.org en **cochant « Add python.exe to PATH »**, puis relancer. |
 | La fenêtre noire se ferme tout de suite | Vérifier que le dossier a bien été **extrait** du ZIP (et pas ouvert directement dedans), puis relancer. |
 | « Un probleme est survenu » | Faire une capture d'écran de la fenêtre noire et l'envoyer au groupe. |
-| Le personnage ne parle pas | La voix n'a pas été téléchargée (pas d'Internet la 1re fois) : supprimer le dossier `voix` et relancer avec Internet. Vérifier aussi le volume dans le mode adulte. |
+| Le jeu s'arrête en parlant de « phrases.txt, ligne … » | Une ligne de `contenu/phrases.txt` n'a plus la forme `NOM = texte` (signe `=` effacé, nom changé…) : la corriger. |
+| Le personnage ne parle pas | Vérifier le volume dans le mode adulte, et que le dossier `voix` contient bien les fichiers `.onnx` (sinon, retélécharger le projet). |
 | `Verifier mes modifications.bat` dit **ATTENTION** | Lire les lignes `FAILED` et les messages juste au-dessus : ils indiquent le fichier et souvent le mot en cause (`mot_inconnu:`, `mot_interdit:`, `trop_long`…). Corriger, enregistrer, revérifier. |
 | Je me suis trompé et je veux tout annuler | GitHub Desktop → colonne **Changes** → clic droit sur le fichier → **Discard changes…** (revient à la dernière version). |
 | J'ai déjà envoyé (Push) une erreur | GitHub Desktop → onglet **History** → clic droit sur le commit → **Revert changes in commit**, puis **Push origin**. Rien n'est jamais perdu. |

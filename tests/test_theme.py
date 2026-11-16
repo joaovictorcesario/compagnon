@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from compagnon.core.settings import SETTING_SPECS
-from compagnon.display.theme import (
+from compagnon.apparence import (
     CARD_COLORS,
     FONT_SIZES,
     PALETTES,
@@ -14,6 +13,7 @@ from compagnon.display.theme import (
     font_path,
     palette,
 )
+from compagnon.reglages import SETTING_SPECS
 
 
 @pytest.mark.parametrize("calm", [False, True])

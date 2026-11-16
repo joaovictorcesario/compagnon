@@ -8,11 +8,10 @@ from __future__ import annotations
 
 import time
 
-from compagnon.ai.filter import FORBIDDEN
-from compagnon.core import phrases
-from compagnon.core.controller import Phase
-from compagnon.core.events import Kind
-from compagnon.core.settings import Settings
+from compagnon import phrases
+from compagnon.ia import FORBIDDEN
+from compagnon.reglages import Kind, Settings
+from compagnon.seance import Phase
 
 
 def test_s1_no_answer_15s_repeats_simpler(make_session):
@@ -167,7 +166,7 @@ def test_s8_adult_says_crisis_pause_offered_earlier_next_session(make_session):
     q = [q for q in h.profile.pending_questions if q["type"] == "crise"]
     assert q, "a question must be waiting for the adult"
     # the adult answers in companion mode
-    from compagnon.child import apply_answer
+    from compagnon.enfant import apply_answer
 
     assert apply_answer(h.profile, q[0]["id"], yes=True)
     h.store.save(h.profile)

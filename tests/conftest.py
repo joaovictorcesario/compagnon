@@ -5,17 +5,13 @@ from dataclasses import dataclass
 
 import pytest
 
-from compagnon.activities import ColorActivity
-from compagnon.ai import AIService, SentenceFilter, StubRephraser
-from compagnon.child import ChildProfile, ProfileStore
-from compagnon.core.clock import FakeClock
-from compagnon.core.controller import SessionController
-from compagnon.core.events import InputEvent, Kind
-from compagnon.core.settings import Settings
-from compagnon.display import FakeDisplay
-from compagnon.logs import SessionLogger
-from compagnon.paths import DataPaths
-from compagnon.voice import RecordingVoice
+from compagnon.enfant import ChildProfile, ProfileStore
+from compagnon.ia import AIService, SentenceFilter, StubRephraser
+from compagnon.jeux import ColorActivity
+from compagnon.reglages import DataPaths, FakeClock, InputEvent, Kind, Settings
+from compagnon.seance import SessionController, SessionLogger
+from compagnon.voix import RecordingVoice
+from fake_display import FakeDisplay
 
 
 @dataclass

@@ -12,56 +12,56 @@
   "couleurs": [
     {
       "id": "rouge", "nom": "rouge", "formes": ["rouge", "rouges"], "rgb": [214, 69, 65],
-      "associations": ["fraise", "tomate", "cerise", "coccinelle", "pompier"],
+      "associations": ["une fraise", "une tomate", "une cerise", "une coccinelle", "les pompiers"],
       "consigne": "Touche le ballon rouge.",
       "reserve_simplifier": ["Touche le rouge.", "Montre le ballon rouge."],
       "reserve_indice": ["Rouge comme une fraise.", "C'est la couleur des tomates."]
     },
     {
       "id": "bleu", "nom": "bleu", "formes": ["bleu", "bleue", "bleus", "bleues"], "rgb": [66, 133, 214],
-      "associations": ["ciel", "mer", "myrtille", "baleine"],
+      "associations": ["le ciel", "la mer", "une myrtille", "une baleine"],
       "consigne": "Touche le ballon bleu.",
       "reserve_simplifier": ["Touche le bleu.", "Montre le ballon bleu."],
       "reserve_indice": ["Bleu comme le ciel.", "C'est la couleur de la mer."]
     },
     {
       "id": "jaune", "nom": "jaune", "formes": ["jaune", "jaunes"], "rgb": [240, 200, 60],
-      "associations": ["soleil", "banane", "citron", "poussin"],
+      "associations": ["le soleil", "une banane", "un citron", "un poussin"],
       "consigne": "Touche le ballon jaune.",
       "reserve_simplifier": ["Touche le jaune.", "Montre le ballon jaune."],
       "reserve_indice": ["Jaune comme le soleil.", "C'est la couleur des bananes."]
     },
     {
       "id": "vert", "nom": "vert", "formes": ["vert", "verte", "verts", "vertes"], "rgb": [80, 170, 90],
-      "associations": ["herbe", "feuille", "grenouille", "salade"],
+      "associations": ["l'herbe", "une feuille", "une grenouille", "une salade"],
       "consigne": "Touche le ballon vert.",
       "reserve_simplifier": ["Touche le vert.", "Montre le ballon vert."],
       "reserve_indice": ["Vert comme une feuille.", "C'est la couleur de l'herbe."]
     },
     {
       "id": "orange", "nom": "orange", "formes": ["orange", "oranges"], "rgb": [240, 145, 60],
-      "associations": ["carotte", "citrouille", "mandarine"],
+      "associations": ["une carotte", "une citrouille", "une mandarine"],
       "consigne": "Touche le ballon orange.",
       "reserve_simplifier": ["Touche l'orange.", "Montre le ballon orange."],
       "reserve_indice": ["Orange comme une carotte.", "C'est la couleur des citrouilles."]
     },
     {
       "id": "violet", "nom": "violet", "formes": ["violet", "violette", "violets", "violettes"], "rgb": [150, 100, 190],
-      "associations": ["raisin", "prune", "aubergine", "lavande"],
+      "associations": ["le raisin", "une prune", "une aubergine", "la lavande"],
       "consigne": "Touche le ballon violet.",
       "reserve_simplifier": ["Touche le violet.", "Montre le ballon violet."],
       "reserve_indice": ["Violet comme une prune.", "C'est la couleur des aubergines."]
     },
     {
       "id": "rose", "nom": "rose", "formes": ["rose", "roses"], "rgb": [240, 150, 190],
-      "associations": ["cochon", "flamant", "bonbon"],
+      "associations": ["un cochon", "un flamant", "un bonbon"],
       "consigne": "Touche le ballon rose.",
       "reserve_simplifier": ["Touche le rose.", "Montre le ballon rose."],
       "reserve_indice": ["Rose comme un petit cochon.", "C'est la couleur des flamants."]
     },
     {
       "id": "marron", "nom": "marron", "formes": ["marron", "marrons"], "rgb": [150, 100, 60],
-      "associations": ["chocolat", "ours", "châtaigne"],
+      "associations": ["le chocolat", "un ours", "une châtaigne"],
       "consigne": "Touche le ballon marron.",
       "reserve_simplifier": ["Touche le marron.", "Montre le ballon marron."],
       "reserve_indice": ["Marron comme le chocolat.", "C'est la couleur des ours."]

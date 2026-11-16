@@ -12,6 +12,11 @@ from importlib import resources
 from compagnon.activities.base import Choice, ImageSpec, Item
 
 
+def noun(association: str) -> str:
+    """'une fraise' -> 'fraise', "l'herbe" -> 'herbe' (associations are stored with article)."""
+    return association.replace("'", " ").split()[-1]
+
+
 def _plural_forms(words: list[str]) -> list[str]:
     out: list[str] = []
     for w in words:
@@ -65,12 +70,12 @@ class ColorActivity:
         c = self.colors[item.key]
         others = [f for cid, o in self.colors.items() if cid != item.key for f in o["formes"]]
         all_forms = [f for o in self.colors.values() for f in o["formes"]]
-        all_assoc = [a for o in self.colors.values() for a in o["associations"]]
+        all_assoc = [noun(a) for o in self.colors.values() for a in o["associations"]]
         return {
             "cible": c["nom"],
             "formes": list(c["formes"]),
             "associations": list(c["associations"]),
-            "associations_formes": _plural_forms(c["associations"]),
+            "associations_formes": _plural_forms([noun(a) for a in c["associations"]]),
             "consigne": item.instruction,
             "autres_couleurs": others,
             "vocabulaire": all_forms + _plural_forms(all_assoc) + ["ballon", "ballons"],

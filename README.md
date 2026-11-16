@@ -121,6 +121,19 @@ Code par défaut **1234** : le changer dans *Données → Changer le code* (stoc
    Règle du groupe : si le **taux de réserve dépasse ~20 %**, raccourcir le prompt
    (`--prompt court`) ou passer à `qwen2.5:0.5b`. En démonstration, l'IA doit vraiment
    apparaître.
+
+   Mesure de référence (portable RTX 2050 4 Go, 100 requêtes, timeout 1,3 s,
+   détail dans `docs/benchmark_rtx2050.json`) :
+
+   | Modèle | Prompt | Latence p50 / p95 | IA | Réserve |
+   |---|---|---|---|---|
+   | **qwen2.5:1.5b** | **normal** | 0,23 s / 0,34 s | **92 %** | **8 %** ✅ |
+   | qwen2.5:1.5b | court | 0,22 s / 0,40 s | 67 % | 33 % |
+   | qwen2.5:0.5b | normal | 0,25 s / 0,36 s | 41 % | 59 % |
+   | qwen2.5:0.5b | court | 0,17 s / 0,30 s | 73 % | 27 % |
+
+   Combinaison retenue : **1.5b + normal**. Exemples de phrases acceptées :
+   « Touche l'orange. », « C'est la couleur de l'aubergine. », « Le chocolat est marron. »
 4. Lancer avec la combinaison retenue :
    ```powershell
    python -m compagnon --ia ollama --modele qwen2.5:1.5b --prompt normal
@@ -142,7 +155,11 @@ Chaque phrase passe par le filtre (`src/compagnon/ai/filter.py`) :
   (`tres`) est accepté **et corrigé** (`très`) seulement s'il correspond à un seul mot du
   lexique ;
 * aucun mot interdit (échec, médical, inadapté), même sans accent ; aucune autre couleur
-  que la cible ; la reformulation garde la couleur ; l'indice utilise une association prévue.
+  que la cible ; la reformulation garde la couleur ; l'indice utilise une association prévue ;
+* qualité (ajoutée après le premier benchmark) : au moins 3 mots, article après « comme »
+  (« comme le ciel », pas « comme mer »), élision obligatoire (« l'herbe », pas « la herbe »),
+  reformulation différente de la consigne ; un infinitif en tête (« Toucher le rouge. »)
+  est mis à l'impératif (« Touche le rouge. »).
 
 Si le modèle répond après **1,3 s**, se trompe ou est rejeté → **phrase préparée**
 immédiatement (réaction < 2 s garantie). Chaque phrase est journalisée avec sa source

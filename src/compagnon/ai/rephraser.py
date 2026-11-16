@@ -74,10 +74,18 @@ class OllamaRephraser:
 
     def warmup(self) -> None:
         """Load the model in memory and keep it there (first call can take seconds)."""
-        self._post("/api/generate", {"model": self.model, "prompt": "", "keep_alive": "30m"}, 120)
+        body = self._body("Réponds en un mot.", "Bonjour")
+        body["options"]["num_predict"] = 1
+        self._post("/api/generate", body, 120)
 
     def generate(self, kind: str, ctx: dict) -> str | None:
         system, prompt = build_prompt(self.prompt_style, kind, ctx, self.rng)
+        out = self._post("/api/generate", self._body(system, prompt), timeout=10)
+        return out.get("response")
+
+    def _body(self, system: str, prompt: str) -> dict:
+        # Same options for warm-up and real calls: a different num_ctx makes Ollama
+        # reload the model (seen in the benchmark: 7-10 s on the first real request).
         body = {
             "model": self.model,
             "system": system,
@@ -94,5 +102,4 @@ class OllamaRephraser:
         }
         if self.thinking_model:
             body["think"] = False  # no hidden reasoning: it would eat the time and tokens
-        out = self._post("/api/generate", body, timeout=10)
-        return out.get("response")
+        return body

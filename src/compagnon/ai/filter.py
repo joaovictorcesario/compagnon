@@ -11,7 +11,10 @@ Rules:
   word of the vocabulary, and the spelling is then corrected ("très");
 * no forbidden word (failure, medical, inappropriate), even without accents;
 * no other colour than the target; "simplifier" must keep the target colour,
-  "indice" must use one of the prepared associations (the AI phrases, it does not invent).
+  "indice" must use one of the prepared associations (the AI phrases, it does not invent);
+* quality (added after the first benchmark): at least 3 words, "comme" followed by an
+  article ("comme le ciel", not "comme mer"), and a "simplifier" sentence must differ
+  from the instruction it replaces.
 """
 
 from __future__ import annotations
@@ -49,6 +52,23 @@ _ALLOWED = re.compile(rf"^[{_LETTERS}' ,.!?\-]+$")
 _WORD_RUN = re.compile(rf"[{_LETTERS}]+")
 _LABEL = re.compile(r"^\s*(phrase|indice|consigne|réponse|reponse)\s*:\s*", re.IGNORECASE)
 _QUOTES = "«»\"“”„‘’'`*"
+_COMME = re.compile(rf"\bcomme\s+([{_LETTERS}]+)(')?")
+# "la herbe", "le orange" -> the article must be elided (l'herbe, l'orange)
+_NO_ELISION = re.compile(rf"\b(le|la|de|ne|je|que)\s+([aeiouàâéèêîôœh][{_LETTERS}]*)")
+H_ASPIRE = frozenset({"haut", "haute", "hibou", "héros", "hérisson", "hamster", "haricot",
+                      "haricots", "hache", "hop"})
+IMPERATIVES = {"toucher": "touche", "montrer": "montre", "trouver": "trouve",
+               "regarder": "regarde", "chercher": "cherche", "choisir": "choisis",
+               "montrez": "montre", "touchez": "touche", "trouvez": "trouve",
+               "regardez": "regarde", "cherchez": "cherche"}
+MIN_WORDS = 3
+DETERMINERS = frozenset({"un", "une", "le", "la", "les", "des", "du", "mon", "ma", "mes",
+                         "ton", "ta", "tes", "ce", "cet", "cette", "ces",
+                         "celle", "celui", "celles", "ceux"})  # "comme celle d'une feuille"
+
+
+def _core(text: str) -> str:
+    return re.sub(r"[\s.!?]+$", "", text).strip()
 
 
 def strip_accents(word: str) -> str:
@@ -69,9 +89,16 @@ def clean_llm_output(raw: str | None) -> str:
     lines = [ln for ln in raw.replace("\r", "").split("\n") if ln.strip()]
     if not lines:
         return ""
-    t = _LABEL.sub("", lines[0].strip())
+    t = lines[0].replace("**", "").replace("__", "")  # markdown bold
+    t = _LABEL.sub("", t.strip())
     t = t.strip().strip(_QUOTES).strip()
-    return normalize(t)
+    t = normalize(t)
+    # "Toucher le rouge." -> "Touche le rouge." (we talk to the child)
+    first, _, rest = t.partition(" ")
+    if first.lower() in IMPERATIVES:
+        imp = IMPERATIVES[first.lower()]
+        t = (imp.capitalize() if first[0].isupper() else imp) + (" " + rest if rest else "")
+    return t
 
 
 @dataclass(frozen=True)
@@ -159,8 +186,20 @@ class SentenceFilter:
                 return FilterResult(False, t, f"autre_couleur:{w}")
             words.append(w)
 
+        if kind in ("simplifier", "indice") and len(_WORD_RUN.findall(low)) < MIN_WORDS:
+            return FilterResult(False, t, "trop_court")
+        for m in _COMME.finditer(low):  # "bleu comme mer" -> missing article
+            if m.group(1) not in DETERMINERS and not (m.group(1) in ELISIONS and m.group(2)):
+                return FilterResult(False, t, "article_manquant")
+        if re.search(r"\bcomme\s*[.!?]*$", low):
+            return FilterResult(False, t, "article_manquant")
+        for m in _NO_ELISION.finditer(low):
+            if m.group(2) not in H_ASPIRE:
+                return FilterResult(False, t, "elision_manquante")
         if kind == "simplifier" and target_forms and not target_forms & set(words):
             return FilterResult(False, t, "cible_absente")
+        if kind == "simplifier" and _core(low) == _core(normalize(ctx.get("consigne", "")).lower()):
+            return FilterResult(False, t, "identique")
         if kind == "indice":
             assoc = {a.lower() for a in ctx.get("associations_formes", ctx.get("associations", ()))}
             if assoc and not assoc & set(words):

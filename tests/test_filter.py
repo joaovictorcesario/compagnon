@@ -21,6 +21,7 @@ def ctx_rouge() -> dict:
     act = ColorActivity()
     item = act.make_item(1, random.Random(0))
     item.key = "rouge"
+    item.instruction = act.colors["rouge"]["consigne"]
     return act.ai_context(item)
 
 
@@ -104,7 +105,7 @@ def test_all_prepared_phrases_pass_the_filter(filt):
         item.key = cid
         item.instruction = act.colors[cid]["consigne"]
         ctx = act.ai_context(item)
-        assert filt.check(item.instruction, "simplifier", ctx).ok, item.instruction
+        assert filt.check(item.instruction, "fixe", ctx).ok, item.instruction
         for p in ctx["reserve"]["simplifier"]:
             assert filt.check(p, "simplifier", ctx).ok, (p, filt.check(p, "simplifier", ctx))
         for p in ctx["reserve"]["indice"]:
@@ -116,3 +117,40 @@ def test_all_prepared_phrases_pass_the_filter(filt):
 
 def test_lexicon_and_forbidden_do_not_overlap():
     assert not load_default_lexicon() & FORBIDDEN
+
+
+@pytest.mark.parametrize("text,kind,reason", [
+    ("Chocolat.", "indice", "trop_court"),
+    ("Comme fraise.", "indice", "trop_court"),
+    ("Rouge comme fraise.", "indice", "article_manquant"),
+    ("La fraise est rouge comme.", "indice", "article_manquant"),
+    ("Touche le ballon rouge.", "simplifier", "identique"),
+])
+def test_quality_rules_from_benchmark(filt, ctx_rouge, text, kind, reason):
+    r = filt.check(text, kind, ctx_rouge)
+    assert not r.ok and r.reason == reason
+
+
+def test_participle_typo_is_corrected_to_imperative(filt, ctx_rouge):
+    r = filt.check("Touché le rouge.", "simplifier", ctx_rouge)
+    assert r.ok and r.text == "Touche le rouge."
+
+
+def test_comme_with_elided_article_is_accepted(filt):
+    act = ColorActivity()
+    item = act.make_item(1, random.Random(0))
+    item.key, item.instruction = "vert", act.colors["vert"]["consigne"]
+    assert filt.check("Vert comme l'herbe.", "indice", act.ai_context(item)).ok
+
+
+def test_infinitive_and_markdown_are_cleaned():
+    assert clean_llm_output("**Toucher le rouge.**") == "Touche le rouge."
+    assert clean_llm_output("Montrer l'orange.") == "Montre l'orange."
+
+
+@pytest.mark.parametrize("text", ["C'est la couleur de la herbe.", "Montre-moi le herbe."])
+def test_missing_elision_is_rejected(filt, text):
+    act = ColorActivity()
+    item = act.make_item(1, random.Random(0))
+    item.key, item.instruction = "vert", act.colors["vert"]["consigne"]
+    assert filt.check(text, "fixe", act.ai_context(item)).reason == "elision_manquante"

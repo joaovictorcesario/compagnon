@@ -1,0 +1,177 @@
+[
+  {
+    "modele": "qwen2.5:1.5b",
+    "prompt": "normal",
+    "n": 100,
+    "timeout_s": 1.3,
+    "latence_p50_s": 0.232,
+    "latence_p95_s": 0.344,
+    "taux_ia": 0.92,
+    "taux_timeout": 0.0,
+    "taux_rejet": 0.08,
+    "taux_erreur": 0.0,
+    "taux_reserve": 0.08,
+    "raisons_rejet": {
+      "association_absente": 1,
+      "mot_inconnu": 5,
+      "autre_couleur": 1,
+      "article_manquant": 1
+    },
+    "exemples": [
+      "Touche le rouge.",
+      "La couleur bleu est comme la mer.",
+      "Touche le jaune.",
+      "La couleur est verte comme l'herbe.",
+      "Touche l'orange.",
+      "C'est la couleur de l'aubergine.",
+      "Touche le rose.",
+      "Le chocolat est marron."
+    ],
+    "exemples_rejetes": [
+      "[indice/vert] 'Vert comme les tomates.' -> association_absente",
+      "[indice/marron] \"C'est la couleur de la mousse.\" -> mot_inconnu:mousse",
+      "[indice/marron] \"Le marron est comme l'ours noir.\" -> mot_inconnu:noir",
+      "[indice/marron] 'La couleur marron est comme un châtaignier.' -> mot_inconnu:châtaignier",
+      "[indice/violet] \"La couleur violet est comme l'aubergine rouge.\" -> autre_couleur:rouge",
+      "[indice/marron] 'Le marron est comme un ours mordu.' -> mot_inconnu:mordu",
+      "[indice/marron] \"C'est le marron, comme dans les châtaignes.\" -> article_manquant",
+      "[indice/bleu] 'Le bleu est comme un bateau blanc.' -> mot_inconnu:bateau"
+    ]
+  },
+  {
+    "modele": "qwen2.5:1.5b",
+    "prompt": "court",
+    "n": 100,
+    "timeout_s": 1.3,
+    "latence_p50_s": 0.217,
+    "latence_p95_s": 0.398,
+    "taux_ia": 0.67,
+    "taux_timeout": 0.0,
+    "taux_rejet": 0.33,
+    "taux_erreur": 0.0,
+    "taux_reserve": 0.33,
+    "raisons_rejet": {
+      "caracteres": 4,
+      "trop_court": 7,
+      "mot_inconnu": 15,
+      "autre_couleur": 5,
+      "trop_long": 1,
+      "article_manquant": 1
+    },
+    "exemples": [
+      "Touche le rouge.",
+      "L'herbe est verte comme une feuille.",
+      "Touche l'orange.",
+      "Le chocolat comme un ours.",
+      "Touche le rouge.",
+      "Touche le jaune.",
+      "Une salade verte.",
+      "Touche l'orange."
+    ],
+    "exemples_rejetes": [
+      "[indice/bleu] 'Même chose : Blanche comme la mer.' -> caracteres",
+      "[simplifier/jaune] 'Le jaune.' -> trop_court",
+      "[indice/violet] 'Un aubergine.' -> trop_court",
+      "[simplifier/rose] 'Effectue le mouvement du doigt sur le rose.' -> mot_inconnu:effectue",
+      "[indice/bleu] 'Une baleine.' -> trop_court",
+      "[indice/marron] 'Une châtaigne comme la confiture.' -> mot_inconnu:confiture",
+      "[indice/bleu] 'Un bateau à grandes ailes.' -> mot_inconnu:bateau",
+      "[indice/vert] 'Rouge comme une feuille.' -> autre_couleur:rouge",
+      "[indice/bleu] 'Je suis désolé, mais je ne peux pas reproduire ou modifier directement des phrases ou des expressions de votre.' -> trop_long",
+      "[simplifier/jaune] 'La couleur jaune est visible.' -> mot_inconnu:visible",
+      "[indice/vert] 'Même chose : Une salade comme fraîche.' -> caracteres",
+      "[simplifier/orange] \"La main toucha l'orange.\" -> mot_inconnu:toucha"
+    ]
+  },
+  {
+    "modele": "qwen2.5:0.5b",
+    "prompt": "normal",
+    "n": 100,
+    "timeout_s": 1.3,
+    "latence_p50_s": 0.246,
+    "latence_p95_s": 0.361,
+    "taux_ia": 0.41,
+    "taux_timeout": 0.0,
+    "taux_rejet": 0.59,
+    "taux_erreur": 0.0,
+    "taux_reserve": 0.59,
+    "raisons_rejet": {
+      "plusieurs_phrases": 32,
+      "mot_inconnu": 10,
+      "autre_couleur": 5,
+      "caracteres": 7,
+      "trop_long": 3,
+      "elision_manquante": 2
+    },
+    "exemples": [
+      "Bleu comme le ciel.",
+      "Vert comme une feuille, c'est la couleur de l'herbe.",
+      "Marron comme un ours, le chocolat.",
+      "Touche le rouge, on trouve le ballon.",
+      "Un vert comme l'herbe.",
+      "Une feuille de vert.",
+      "Le raisin, le violet, la lavande.",
+      "Touche le rouge, on trouve le ballon."
+    ],
+    "exemples_rejetes": [
+      "[simplifier/rouge] \"Touche le rouge, c'est le bleu. C'est la couleur du ciel. Il y a aussi.\" -> plusieurs_phrases",
+      "[simplifier/jaune] \"Touche le jaune. Qu'est-ce que le jaune ? Il est vert. Il est rouge. Il.\" -> plusieurs_phrases",
+      "[simplifier/orange] \"L'orange est un fruit. Il est vert. Il se glisse sur la table.\" -> plusieurs_phrases",
+      "[indice/violet] 'Une aubergine est un pigment rouge, elle est violette.' -> mot_inconnu:pigment",
+      "[simplifier/rose] \"Touche la couleur rose. La couleur est la couleur rose. C'est un ballon rose. Moi,.\" -> plusieurs_phrases",
+      "[indice/bleu] 'Une baleine rouge.' -> autre_couleur:rouge",
+      "[simplifier/jaune] 'Touche la couleur, en 3 à 6 mots. Le mot jaune doit être dans la phrase.' -> caracteres",
+      "[simplifier/orange] \"Touche l'orange, c'est le rouge. L'orange est une couleur. C'est un trè.\" -> plusieurs_phrases",
+      "[indice/violet] 'Le rouge comme un papillon.' -> autre_couleur:rouge",
+      "[simplifier/rose] \"Touche le rose. En 3 à 6 mots, le rose. Qu'est-ce que le rose ?\" -> caracteres",
+      "[indice/marron] 'Marron comme le mignon.' -> mot_inconnu:mignon",
+      "[simplifier/rouge] \"Touche le rouge. C'est le rouge. Qui est le rouge ? Il est le rouge. C'est le.\" -> plusieurs_phrases"
+    ]
+  },
+  {
+    "modele": "qwen2.5:0.5b",
+    "prompt": "court",
+    "n": 100,
+    "timeout_s": 1.3,
+    "latence_p50_s": 0.167,
+    "latence_p95_s": 0.297,
+    "taux_ia": 0.73,
+    "taux_timeout": 0.0,
+    "taux_rejet": 0.27,
+    "taux_erreur": 0.0,
+    "taux_reserve": 0.27,
+    "raisons_rejet": {
+      "mot_inconnu": 13,
+      "trop_court": 6,
+      "mot_interdit": 1,
+      "caracteres": 4,
+      "elision_manquante": 1,
+      "cible_absente": 1,
+      "association_absente": 1
+    },
+    "exemples": [
+      "Touche le rouge.",
+      "Touche le jaune.",
+      "Vert comme l'herbe.",
+      "Un aubergine comme le raisin.",
+      "Touche le rose.",
+      "Touche le rouge.",
+      "Vert comme une salade.",
+      "Touche l'orange."
+    ],
+    "exemples_rejetes": [
+      "[indice/bleu] \"Bleu comme le ciel, mer comme l'océan.\" -> mot_inconnu:océan",
+      "[simplifier/orange] 'Un orange.' -> trop_court",
+      "[indice/marron] 'Le chocolat comme un chèvre.' -> mot_inconnu:chèvre",
+      "[indice/bleu] 'un seul.' -> mot_inconnu:seul",
+      "[simplifier/jaune] 'La pomme est blanche.' -> mot_inconnu:blanche",
+      "[indice/bleu] 'Eau comme le sang.' -> mot_interdit:sang",
+      "[simplifier/jaune] 'Le bon exemple serait : \"Toucher le jaune.' -> caracteres",
+      "[simplifier/rouge] 'Un rouge.' -> trop_court",
+      "[simplifier/jaune] 'Le jaune.' -> trop_court",
+      "[indice/marron] 'Chaque châtaigne est un morceau de châtaigné.' -> mot_inconnu:morceau",
+      "[indice/bleu] \"Blanc comme l'air.\" -> mot_inconnu:blanc",
+      "[simplifier/orange] 'Le bon exemple serait : \"Toucher l\\'orange.' -> caracteres"
+    ]
+  }
+]

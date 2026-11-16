@@ -29,13 +29,14 @@ faire fais fait faisons faites font
 pouvoir peux peut pouvons pouvez peuvent
 vouloir veux veut voulons voulez veulent
 voir vois voit voyons voyez
-regarder regarde regardes regardez regardons regardé
-toucher touche touches touchez touchons touché
-trouver trouve trouves trouvez trouvons trouvé
+# Participes passés retirés (benchmark : « Touché l'orange. » acceptait une faute).
+regarder regarde regardes regardez regardons
+toucher touche touches touchez touchons
+trouver trouve trouves trouvez trouvons
 chercher cherche cherches cherchez cherchons
 montrer montre montres montrez montrons
-choisir choisis choisit choisissez choisissons choisi
-prendre prends prend prenez prenons pris
+choisir choisis choisit choisissez choisissons
+prendre prends prend prenez prenons
 appuyer appuie appuies appuyez
 essayer essaie essaies essaye essayez essayons
 aider aide aides aidez

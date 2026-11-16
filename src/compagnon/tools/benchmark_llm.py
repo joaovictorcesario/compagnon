@@ -52,6 +52,7 @@ def run_one(model: str, style: str, n: int, timeout: float, seed: int) -> dict:
     outcome: Counter[str] = Counter()
     reasons: Counter[str] = Counter()
     accepted: list[str] = []
+    rejected: list[str] = []
     for kind, ctx in contexts(n, random.Random(seed)):
         box: dict[str, object] = {}
 
@@ -80,6 +81,7 @@ def run_one(model: str, style: str, n: int, timeout: float, seed: int) -> dict:
         else:
             outcome["rejet"] += 1
             reasons[(res.reason or "?").split(":")[0]] += 1
+            rejected.append(f"[{kind}/{ctx['cible']}] {res.text!r} -> {res.reason}")
     lat_sorted = sorted(latencies)
     fallback = (n - outcome["llm"]) / n
     return {
@@ -93,6 +95,7 @@ def run_one(model: str, style: str, n: int, timeout: float, seed: int) -> dict:
         "taux_reserve": round(fallback, 3),
         "raisons_rejet": dict(reasons),
         "exemples": accepted[:8],
+        "exemples_rejetes": rejected[:12],
     }
 
 

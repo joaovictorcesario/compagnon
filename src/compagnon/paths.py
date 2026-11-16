@@ -50,6 +50,10 @@ class DataPaths:
     def rewards(self) -> Path:
         return self.root / "recompenses"
 
+    @property
+    def character(self) -> Path:
+        return self.root / "personnage"
+
     def ensure(self) -> DataPaths:
         for d in (self.root, self.profiles, self.logs, self.tts_cache, self.voices, self.rewards):
             d.mkdir(parents=True, exist_ok=True)

@@ -36,6 +36,9 @@ class FakeDisplay:
     def set_expression(self, expression: str) -> None:
         self._rec("set_expression", expression)
 
+    def emphasize_instruction(self) -> None:
+        self._rec("emphasize_instruction")
+
     def show_reward(self, reward: RewardView) -> None:
         self._rec("show_reward", reward)
 

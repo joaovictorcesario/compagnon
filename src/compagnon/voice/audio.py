@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import array
 import hashlib
+import io
 import math
 import os
 import threading
@@ -18,43 +19,65 @@ from pathlib import Path
 import pygame
 
 from compagnon.core.settings import Settings
+from compagnon.voice.presets import DEFAULT_VOICE, resolve_voice
 
-DEFAULT_VOICE = "fr_FR-siwis-medium"
 SAMPLE_RATE = 22050
 FADE_MS = 120
 
 
 class PiperEngine:
-    def __init__(self, model_path: Path) -> None:
+    def __init__(self, model_path: Path, speaker: str | None = None,
+                 semitones: float = 0.0) -> None:
         from piper import PiperVoice
 
         self.voice = PiperVoice.load(str(model_path))
-        self.name = f"piper:{model_path.stem}"
+        self.speaker_id: int | None = None
+        if speaker is not None:
+            ids = self.voice.config.speaker_id_map or {}
+            if speaker not in ids:
+                raise ValueError(f"locuteur « {speaker} » absent ({', '.join(ids)})")
+            self.speaker_id = ids[speaker]
+        self.pitch = 2 ** (semitones / 12)
+        self.name = f"piper:{model_path.stem}:{speaker or '-'}:{semitones:+g}"
         self._warmup()
 
     def _warmup(self) -> None:
         """The very first synthesis takes several seconds (engine start-up). Do it now,
         before the session starts, so no reaction during the session exceeds 2 s."""
-        import io
+        self._render("Bonjour.", slow=False)
 
-        buf = io.BytesIO()
-        with wave.open(buf, "wb") as wf:
-            self.voice.synthesize_wav("Bonjour.", wf)
-
-    def synthesize(self, text: str, out: Path, slow: bool) -> None:
+    def _render(self, text: str, slow: bool) -> tuple[wave._wave_params, bytes]:
         from piper import SynthesisConfig
 
-        cfg = SynthesisConfig(length_scale=1.3 if slow else 1.0)
-        with wave.open(str(out), "wb") as wf:
+        # Speak slower by the pitch factor, then play the samples faster by the same
+        # factor: higher voice, same speed.
+        cfg = SynthesisConfig(speaker_id=self.speaker_id,
+                              length_scale=(1.3 if slow else 1.0) * self.pitch)
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
             self.voice.synthesize_wav(text, wf, syn_config=cfg)
+        buf.seek(0)
+        with wave.open(buf, "rb") as rf:
+            return rf.getparams(), rf.readframes(rf.getnframes())
+
+    def synthesize(self, text: str, out: Path, slow: bool) -> None:
+        params, frames = self._render(text, slow)
+        with wave.open(str(out), "wb") as wf:
+            wf.setnchannels(params.nchannels)
+            wf.setsampwidth(params.sampwidth)
+            wf.setframerate(round(params.framerate * self.pitch))
+            wf.writeframes(frames)
 
 
 def load_engine(voices_dir: Path, voice_name: str = DEFAULT_VOICE) -> PiperEngine | None:
-    model = voices_dir / f"{voice_name}.onnx"
+    preset = resolve_voice(voice_name)
+    model = voices_dir / f"{preset.model}.onnx"
     if not model.exists():
+        print(f"[voix] modèle « {preset.model} » absent de {voices_dir} : texte seulement. "
+              "(voir README)")
         return None
     try:
-        return PiperEngine(model)
+        return PiperEngine(model, preset.speaker, preset.semitones)
     except Exception as exc:  # noqa: BLE001
         print(f"[voix] Piper indisponible : {exc}")
         return None

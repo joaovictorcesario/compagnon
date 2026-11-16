@@ -28,16 +28,36 @@ py -3.12 -m venv .venv
 python -m pip install -e ".[voix,dev]"
 ```
 
-### Voix française (Piper, ~60 Mo, une seule fois)
+### Voix française (Piper, une seule fois)
 
 Le dossier de données est `%APPDATA%\compagnon` (il est créé au premier lancement).
 
 ```powershell
-python -m piper.download_voices fr_FR-siwis-medium --data-dir "$env:APPDATA\compagnon\voix"
+python -m piper.download_voices fr_FR-siwis-medium fr_FR-upmc-medium --data-dir "$env:APPDATA\compagnon\voix"
 ```
 
-Sans voix installée, le compagnon fonctionne quand même (texte + image) et l'indique dans
-le terminal. Option `--sans-voix` pour couper la voix volontairement.
+Piper n'a pas de voix d'enfant en français : les préréglages montent la hauteur de la voix
+(sans accélérer le débit) pour une voix plus douce et plus jeune. Choix avec `--voix` :
+
+| Préréglage | Voix | Hauteur |
+|---|---|---|
+| `siwis` | fr_FR-siwis-medium | normale |
+| `siwis-douce` (**défaut**) | fr_FR-siwis-medium | +3 demi-tons |
+| `siwis-enfant` | fr_FR-siwis-medium | +5 demi-tons |
+| `jessica`, `jessica-douce`, `jessica-enfant` | fr_FR-upmc-medium (locutrice jessica) | 0 / +3 / +5 |
+
+Le terminal affiche la voix chargée (`[voix] piper:fr_FR-siwis-medium:-:+3`). Sans voix
+installée, le compagnon fonctionne quand même (texte + image) et l'indique. Option
+`--sans-voix` pour couper la voix volontairement.
+
+### Personnage personnalisé
+
+Le personnage dessiné (formes géométriques) est remplaçable sans toucher au code : déposer
+une image par expression dans `%APPDATA%\compagnon\personnage\` (ou `--personnage <dossier>`)
+: `neutre.png` (obligatoire), `content.png`, `encourage.png`, `calme.png`. PNG carré à fond
+transparent, n'importe quelle taille ; une expression manquante utilise `neutre.png`.
+Pas de clignotement : seule une « respiration » lente est appliquée si les animations sont
+activées. Code : `src/compagnon/display/character.py` (interface `Character`).
 
 ### Lancer le démonstrateur V1
 
@@ -116,7 +136,7 @@ immédiatement (réaction < 2 s garantie). Chaque phrase est journalisée avec s
 ## 3. Tests et validation
 
 ```powershell
-python -m pytest            # 72 tests, < 10 s, temps simulé
+python -m pytest            # 76 tests, < 10 s, temps simulé
 python -m ruff check src tests
 ```
 

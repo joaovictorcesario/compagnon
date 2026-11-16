@@ -33,6 +33,10 @@ def disp(data_paths):
     pygame.quit()
 
 
+def _near(color, expected, tol=3):
+    return all(abs(a - b) <= tol for a, b in zip(color[:3], expected, strict=True))
+
+
 def _click(pos):
     pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
 
@@ -90,3 +94,39 @@ def test_companion_screens_render(disp):
     for tab in ("reglages", "questions", "donnees"):
         disp.companion_ui.tab = tab
         disp.render()
+
+
+def test_custom_character_from_images(tmp_path, disp):
+    """Future custom character: one PNG per expression; missing ones fall back to neutre."""
+    from compagnon.display.character import GeometricCharacter, SpriteCharacter, load_character
+
+    folder = tmp_path / "personnage"
+    folder.mkdir()
+    for name, color in (("neutre", (200, 120, 60)), ("content", (60, 160, 90))):
+        img = pygame.Surface((300, 300), pygame.SRCALPHA)
+        pygame.draw.circle(img, color, (150, 150), 140)
+        pygame.image.save(img, str(folder / f"{name}.png"))
+    char = load_character(folder)
+    assert isinstance(char, SpriteCharacter)
+    disp.character = char
+    disp.announce_activity("Les couleurs", "Maintenant, on joue avec les couleurs.")
+    disp.render()
+    assert _near(disp.screen.get_at((512, 230)), (60, 160, 90))  # "content" sprite drawn
+    disp.show_end("fin")
+    disp.set_expression("calme")  # missing image -> neutre
+    disp.render()
+    assert _near(disp.screen.get_at((512, 230)), (200, 120, 60))
+    assert isinstance(load_character(tmp_path / "absent"), GeometricCharacter)
+
+
+def test_repeat_emphasizes_the_bubble(disp):
+    import random
+
+    act = ColorActivity()
+    item = act.make_item(1, random.Random(1))
+    disp.show_scene(Scene(act.title, item.instruction, item.image, tuple(item.choices)))
+    disp.render()
+    normal = disp.screen.get_at((300, 120))[:3]
+    disp.emphasize_instruction()
+    disp.render()
+    assert disp.screen.get_at((300, 120))[:3] != normal

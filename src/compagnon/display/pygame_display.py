@@ -17,11 +17,11 @@ from compagnon.companion.mode import CompanionMode
 from compagnon.core.events import InputEvent, Kind
 from compagnon.core.settings import Settings
 from compagnon.display.base import RewardView, Scene
+from compagnon.display.character import Character, GeometricCharacter
 from compagnon.display.companion_screen import CompanionScreen
 from compagnon.display.drawing import (
     blit_center,
     draw_balloon,
-    draw_character,
     draw_mystery_balloon,
     draw_speaker,
     draw_star,
@@ -33,6 +33,7 @@ from compagnon.display.palettes import FONT_SIZES, palette
 W, H = 1024, 720
 ADULT_CORNER = pygame.Rect(W - 56, 0, 56, 56)
 LONG_PRESS_S = 3.0
+EMPHASIS_S = 1.5
 FONT_NAMES = "verdana,dejavusans,arial"
 
 
@@ -42,7 +43,8 @@ def make_font(size: int, bold: bool = False) -> pygame.font.Font:
 
 class PygameDisplay:
     def __init__(self, settings: Settings, companion: CompanionMode | None = None,
-                 fullscreen: bool = False, rewards_dir: Path | None = None) -> None:
+                 fullscreen: bool = False, rewards_dir: Path | None = None,
+                 character: Character | None = None) -> None:
         pygame.init()
         flags = pygame.SCALED | (pygame.FULLSCREEN if fullscreen else 0)
         self.screen = pygame.display.set_mode((W, H), flags)
@@ -57,6 +59,8 @@ class PygameDisplay:
         self.expression = "neutre"
         self.reward: RewardView | None = None
         self.calm = False
+        self.character = character or GeometricCharacter()
+        self._emphasis_until = 0.0
         self._targets: list[tuple[pygame.Rect, InputEvent]] = []
         self._press_start: float | None = None
         self._t0 = time.monotonic()
@@ -91,6 +95,11 @@ class PygameDisplay:
 
     def show_pause(self, text: str) -> None:
         self.mode, self.text, self.expression = "pause", text, "calme"
+
+    def emphasize_instruction(self) -> None:
+        """Instruction said again: the bubble turns soft blue for 1.5 s (steady, no blinking),
+        so a repeat is also visible, not only audible."""
+        self._emphasis_until = time.monotonic() + EMPHASIS_S
 
     def set_calm(self, calm: bool) -> None:
         self.calm = calm
@@ -149,10 +158,10 @@ class PygameDisplay:
         if self.mode == "scene" and self.scene is not None:
             self._render_scene(s, pal, t, animate, targets)
         elif self.mode == "annonce":
-            draw_character(s, (W // 2, 230), 95, "content", pal, t, animate)
+            self.character.draw(s, (W // 2, 230), 95, "content", pal, t, animate)
             self._center_text(s, pal, self.text, 400, self.f_title)
         elif self.mode == "pause_proposee":
-            draw_character(s, (W // 2, 200), 85, "calme", pal, t, False)
+            self.character.draw(s, (W // 2, 200), 85, "calme", pal, t, False)
             self._center_text(s, pal, self.text, 330, self.f_title)
             offer = (("Pause", Kind.PAUSE), ("Continuer", Kind.CONTINUE))
             for i, (label, kind) in enumerate(offer):
@@ -161,14 +170,14 @@ class PygameDisplay:
                 blit_center(s, self.f_title, label, pal["btn_text"], r.center)
                 targets.append((r, InputEvent(kind)))
         elif self.mode == "pause":
-            draw_character(s, (W // 2, 200), 85, "calme", pal, t, False)
+            self.character.draw(s, (W // 2, 200), 85, "calme", pal, t, False)
             self._center_text(s, pal, self.text, 330, self.f_title)
             r = pygame.Rect(W // 2 - 150, 400, 300, 110)
             rounded_rect(s, pal["fini"], r, 24, pal["outline"])
             blit_center(s, self.f_title, "Reprendre", pal["btn_text"], r.center)
             targets.append((r, InputEvent(Kind.CONTINUE)))
         elif self.mode == "fin":
-            draw_character(s, (W // 2, 230), 95, self.expression, pal, t, animate)
+            self.character.draw(s, (W // 2, 230), 95, self.expression, pal, t, animate)
             self._center_text(s, pal, self.text, 400, self.f_title)
 
         self._render_fixed_buttons(s, pal, targets)
@@ -186,10 +195,12 @@ class PygameDisplay:
                       targets: list) -> None:
         scene = self.scene
         assert scene is not None
-        draw_character(s, (150, 200), 80, self.expression, pal, t, animate)
+        self.character.draw(s, (150, 200), 80, self.expression, pal, t, animate)
         bubble = pygame.Rect(262, 90, 510, 170)
-        pygame.draw.polygon(s, pal["bubble"], [(236, 200), (266, 180), (266, 220)])
-        rounded_rect(s, pal["bubble"], bubble, 24, pal["outline"])
+        emphasized = time.monotonic() < self._emphasis_until
+        bubble_color = pal["aide"] if emphasized else pal["bubble"]
+        pygame.draw.polygon(s, bubble_color, [(236, 200), (266, 180), (266, 220)])
+        rounded_rect(s, bubble_color, bubble, 24, pal["outline"], 5 if emphasized else 3)
         lines = wrap_text(self.f_text, scene.text, bubble.width - 40)
         lh = self.f_text.get_height() + 4
         y0 = bubble.centery - (len(lines) * lh) // 2 + lh // 2

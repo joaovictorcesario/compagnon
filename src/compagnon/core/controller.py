@@ -238,6 +238,7 @@ class SessionController:
             elif ev.kind == Kind.HELP:
                 self._give_help(min(HelpLevel.MODEL, self.help_level + 1), "bouton_aide")
             elif ev.kind == Kind.REPEAT:
+                self.display.emphasize_instruction()
                 self._say(self.instruction, "repetition")
                 self.last_prompt = now
         elif self.phase == Phase.ANNOUNCE and ev.kind == Kind.REPEAT:
@@ -308,6 +309,7 @@ class SessionController:
             self.instruction = phrases.MODEL
         self.log.log("aide", niveau=level, declencheur=trigger)
         self._present(expression="encourage")
+        self.display.emphasize_instruction()
         self._say(self.instruction, f"aide_{level}", source=source, **extra)
         self.last_prompt = self._now()
 
@@ -317,6 +319,7 @@ class SessionController:
         if self.help_level < HelpLevel.REFORMULATE:
             self._give_help(HelpLevel.REFORMULATE, "silence")
         else:
+            self.display.emphasize_instruction()
             self._say(self.instruction, "repetition_silence")
             self.last_prompt = self._now()
 

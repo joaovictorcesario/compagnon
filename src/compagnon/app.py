@@ -24,6 +24,7 @@ from compagnon.core.settings import SettingsStore
 from compagnon.logs import SessionLogger, new_log_path
 from compagnon.paths import DataPaths, default_data_dir
 from compagnon.voice import RecordingVoice
+from compagnon.voice.presets import DEFAULT_VOICE, VOICE_PRESETS
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -34,7 +35,10 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--modele", default="qwen2.5:1.5b")
     p.add_argument("--prompt", choices=["normal", "court"], default="normal")
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S)
-    p.add_argument("--voix", default="fr_FR-siwis-medium")
+    p.add_argument("--voix", default=DEFAULT_VOICE,
+                   help=f"préréglage ({', '.join(VOICE_PRESETS)}) ou modèle Piper")
+    p.add_argument("--personnage", type=Path, default=None,
+                   help="dossier d'images du personnage (neutre.png, content.png...)")
     p.add_argument("--sans-voix", action="store_true")
     p.add_argument("--plein-ecran", action="store_true")
     p.add_argument("--graine", type=int, default=None, help="graine aléatoire (démo reproductible)")
@@ -66,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     import pygame
 
+    from compagnon.display.character import load_character
     from compagnon.display.pygame_display import PygameDisplay
     from compagnon.voice.audio import PygameVoice, load_engine
 
@@ -84,7 +89,8 @@ def main(argv: list[str] | None = None) -> int:
     companion = CompanionMode(paths=paths, settings_store=settings_store,
                               pin_store=PinStore(paths.pin), profile_store=profile_store,
                               profile=profile, clock=clock, on_action=adult_action)
-    display = PygameDisplay(companion.settings, companion, args.plein_ecran, paths.rewards)
+    display = PygameDisplay(companion.settings, companion, args.plein_ecran, paths.rewards,
+                            load_character(args.personnage or paths.character))
     ai = build_ai(args)
     activities = build_activities(companion.settings.activities)
 
@@ -92,9 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         voice = RecordingVoice()
     else:
         engine = load_engine(paths.voices, args.voix)
-        if engine is None:
-            print(f"[voix] voix « {args.voix} » absente de {paths.voices} : texte seulement. "
-                  "(voir README)")
+        print(f"[voix] {engine.name if engine else 'aucune (texte seulement)'}")
         voice = PygameVoice(paths.tts_cache, engine)
         texts = list(phrases.ALL_FIXED)
         for a in activities:

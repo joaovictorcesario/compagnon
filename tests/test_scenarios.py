@@ -269,3 +269,12 @@ def test_reaction_time_under_2s(make_session):
         h.press(kind)
     for rec in h.log.events("evenement_entree"):
         assert rec["reaction_ms"] < 2000
+
+
+def test_repeat_and_first_help_are_visible_not_only_audible(make_session):
+    h = make_session()
+    h.to_first_question()
+    h.press(Kind.REPEAT)
+    assert len(h.display.named("emphasize_instruction")) == 1
+    h.press(Kind.HELP)  # level 1 = same instruction: the bubble is emphasized too
+    assert len(h.display.named("emphasize_instruction")) == 2
